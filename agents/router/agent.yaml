@@ -1,0 +1,13 @@
+id: router
+name: router
+description: Revisa cada mañana el estado del router y resume en lenguaje claro lo que ha pasado, lo que requiere atención y lo que debe decidir una persona.
+version: 1
+project: router
+tier: fast
+effort: low
+max_turns: 10
+budget:
+  tokens_per_case: 30000
+  usd_per_case: 0.20
+tools: []
+owner: prod

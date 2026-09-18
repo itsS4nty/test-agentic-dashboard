@@ -89,6 +89,9 @@ actions:
   - action: plataforma_open_pr
     level: auto
 
+  # ── router (agente creador) ──────────────────────
+
+
 
 overrides:
   # Pan de Pueblo pidió aprobar cualquier reinicio en sus tiendas.
