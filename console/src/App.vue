@@ -15,6 +15,7 @@ import AgentesView from './views/AgentesView.vue';
 import AprobacionesView from './views/AprobacionesView.vue';
 import CasosView from './views/CasosView.vue';
 import CodigoView from './views/CodigoView.vue';
+import CrearAgenteView from './views/CrearAgenteView.vue';
 import DispositivoView from './views/DispositivoView.vue';
 import DialView from './views/DialView.vue';
 import FacturasView from './views/FacturasView.vue';
@@ -25,7 +26,7 @@ import SoporteView from './views/SoporteView.vue';
 /** Ruta oculta con todos los componentes base, para revisión visual. No aparece en las pestañas. */
 const Showcase = defineAsyncComponent(() => import('./ui/Showcase.vue'));
 
-type TabId = 'resumen' | 'dispositivo' | 'codigo' | 'facturas' | 'soporte' | 'casos' | 'aprobaciones' | 'dial' | 'agentes';
+type TabId = 'resumen' | 'dispositivo' | 'codigo' | 'facturas' | 'soporte' | 'casos' | 'aprobaciones' | 'dial' | 'agentes' | 'crear';
 type RouteId = TabId | 'muestrario';
 
 interface Tab {
@@ -44,6 +45,7 @@ const TABS: Tab[] = [
   { id: 'aprobaciones', label: 'Aprobaciones', component: AprobacionesView },
   { id: 'dial', label: 'El dial', component: DialView },
   { id: 'agentes', label: 'Agentes', component: AgentesView },
+  { id: 'crear', label: 'Crear agente', component: CrearAgenteView },
 ];
 
 // ── Navegación con location.hash ────────────────────────

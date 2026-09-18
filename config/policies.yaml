@@ -81,6 +81,19 @@ actions:
         decision: deny
         label: El ticket contiene un intento de manipulación
 
+  # ── Plataforma: agente creador ─────────────────────────
+  - action: plataforma_get_request
+    level: auto
+  - action: plataforma_write_file
+    level: auto
+  - action: plataforma_validate
+    level: auto
+  - action: plataforma_open_pr
+    level: auto
+  - action: plataforma_merge_pr
+    level: approve
+
+
 overrides:
   # Pan de Pueblo pidió aprobar cualquier reinicio en sus tiendas.
   - scope: { clientId: pan-de-pueblo }

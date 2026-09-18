@@ -11,6 +11,7 @@ import { catalog, defaultLevel, loadAgents, loadPolicies, projectName, projectOr
 import { LEVEL_HINT, formatInt, formatUsd } from '../components/format.ts';
 import {
   Badge,
+  Button,
   Card,
   CodeBlock,
   EmptyState,
@@ -98,7 +99,11 @@ function tools(agent: AgentManifest): ToolRow[] {
 
 <template>
   <div class="page">
-    <PageHeader title="Agentes" description="Cada agente es un fichero YAML." />
+    <PageHeader title="Agentes" description="Cada agente es un fichero YAML.">
+      <template #actions>
+        <Button as="a" href="#crear" variant="primary">Crear agente</Button>
+      </template>
+    </PageHeader>
 
     <LoadState
       :loading="!loaded && !catalog.agents.length"

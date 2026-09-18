@@ -1,0 +1,18 @@
+id: creador
+name: Agente creador de agentes
+description: Convierte la descripción de un agente en código listo para revisar (manifiesto, prompt y herramientas) y abre un PR en el repositorio de la plataforma.
+version: 1
+project: plataforma
+tier: reasoning
+effort: medium
+max_turns: 14
+budget:
+  tokens_per_case: 250000
+  usd_per_case: 1.50
+tools:
+  - plataforma_get_request
+  - plataforma_write_file
+  - plataforma_validate
+  - plataforma_open_pr
+  - plataforma_merge_pr
+owner: Plataforma

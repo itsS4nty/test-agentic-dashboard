@@ -11,7 +11,10 @@
  * El repositorio git de bugs vive en `<dataDir>/repos` aunque el estado sea en memoria, así que el
  * smoke usa su propio `data/smoke` (lo borra al empezar y al terminar) para no pisar al servidor.
  */
+import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
+import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Case, PlatformApi, PlatformEvent, TimelineEntry } from '../platform/contracts.ts';
@@ -24,6 +27,8 @@ import type { Ticket } from '../projects/soporte/state.ts';
 
 // Siempre en modo local: un .env con GITHUB_TOKEN no debe hacer que esta comprobación llame a GitHub.
 process.env.DEMO_GITHUB = 'off';
+
+const execGit = promisify(execFile);
 
 const rootDir = fileURLToPath(new URL('..', import.meta.url));
 const dataDir = join(rootDir, 'data', 'smoke');
@@ -86,6 +91,7 @@ const EXPECTED_SCENARIOS = [
   'soporte-bandeja',
   'soporte-inyeccion',
   'soporte-prueba-fuego',
+  'plataforma-crear-agente',
 ];
 
 const WAVE_DEVICES = ['hr-ruzafa', 'hr-campanar', 'hr-benimaclet', 'fb-sants', 'fb-poblenou'].map((s) => `${s}:DAT-01`);
@@ -101,14 +107,14 @@ const blocks: Block[] = [
     name: 'Catálogo',
     async run(platform) {
       const ids = platform.projects.list().map((p) => p.id);
-      check('4 proyectos registrados en orden', ids.join(',') === 'dispositivo,bugs,facturas,soporte', ids);
+      check('5 proyectos registrados en orden', ids.join(',') === 'dispositivo,bugs,facturas,soporte,plataforma', ids);
 
       const scenarios = [...platform.projects.scenarios()].sort((a, b) => a.order - b.order).map((s) => s.id);
-      check('11 escenarios del § 6 ordenados por order', scenarios.join(',') === EXPECTED_SCENARIOS.join(','), scenarios);
+      check('12 escenarios ordenados por order', scenarios.join(',') === EXPECTED_SCENARIOS.join(','), scenarios);
 
       const manifests = platform.manifests.list();
       const agentIds = manifests.map((m) => m.id).sort();
-      check('4 agentes cargados desde YAML', agentIds.join(',') === 'bugs,dispositivos,facturacion,soporte', agentIds);
+      check('5 agentes cargados desde YAML', agentIds.join(',') === 'bugs,creador,dispositivos,facturacion,soporte', agentIds);
       const missingTools = manifests.flatMap((m) => m.tools.filter((t) => !platform.tools.get(t)).map((t) => `${m.id}:${t}`));
       check('todas las herramientas de los manifiestos están registradas', missingTools.length === 0, missingTools);
       const orphanProjects = manifests.filter((m) => !platform.projects.get(m.project)).map((m) => m.id);
@@ -393,6 +399,29 @@ const blocks: Block[] = [
       check('ningún caso fallido ni con errores', errors.length === 0, errors.map((c) => `${c.title}: ${short(c.timeline.find((e) => e.kind === 'error')?.title, 60)}`));
     },
   },
+  {
+    name: 'Creador de agentes',
+    reset: true,
+    run: async (platform) => {
+      const snap = () => platform.projects.get('plataforma')!.snapshot!(platform) as any;
+      const bad = await platform.projects.runScenario('plataforma-crear-agente').catch((e) => ({ message: String(e) }));
+      check('el escenario envía la solicitud', /SOL-001/.test(bad.message), bad.message);
+      await settle(platform, 4);
+      const pr = await waitFor(() => snap().prs[0], 20000);
+      check('el creador abre un PR con la validación correcta', pr?.validation?.ok, pr?.validation?.steps);
+      check('el PR trae manifiesto, prompt, herramientas y fontanería', pr?.files?.length === 7, pr?.files?.map((f: any) => f.path));
+      check('las variables nuevas van a .env.example', pr?.envVars?.includes('PEDIDOS_OBRADOR_ERP_OBRADOR_URL'), pr?.envVars);
+      const approval = platform.approvals.list({ status: 'pending' }).find((a) => a.tool === 'plataforma_merge_pr');
+      check('la fusión espera aprobación', approval, platform.approvals.list({}).map((a) => a.tool));
+      if (approval) {
+        await platform.approvals.decide(approval.id, 'approved', 'smoke');
+        await settle(platform, 2);
+      }
+      check('tras aprobar, el PR queda fusionado', snap().prs[0]?.status === 'merged', snap().prs[0]?.activation);
+      const invalid = await import('../projects/plataforma/index.ts').then((m) => m.submitAgentRequest(platform, { name: 'x' }));
+      check('una especificación incompleta se rechaza campo a campo', !invalid.ok && invalid.errors.length >= 3, invalid);
+    },
+  },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -419,6 +448,13 @@ function printTable(): number {
 
 async function main(): Promise<number> {
   await rm(dataDir, { recursive: true, force: true });
+  // El creador trabaja sobre una copia del repo, nunca sobre el de verdad.
+  const creadorRepo = join(dataDir, 'creador-repo');
+  if (existsSync(join(rootDir, '.git'))) {
+    await execGit('git', ['clone', '--quiet', '--local', '--no-hardlinks', rootDir, creadorRepo]);
+    await execGit('git', ['-C', creadorRepo, 'remote', 'remove', 'origin']);
+    process.env.CREADOR_REPO_DIR = creadorRepo;
+  }
   const platform = await createPlatform({ rootDir, dataDir, inMemory: true, fast: true, provider: 'mock' });
   const events: PlatformEvent[] = [];
   platform.events.on((e) => events.push(e));

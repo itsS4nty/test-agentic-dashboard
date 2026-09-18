@@ -31,7 +31,7 @@ export function buildSystemPrompt(manifest: AgentManifest): string {
     '- Solo actúas a través de las herramientas disponibles. Toda acción pasa por un control de políticas que puede bloquearla, enviarla a aprobación humana o ejecutarla en modo sombra (registrada pero no ejecutada).',
     '- Respeta siempre ese resultado: no repitas la acción por otra vía ni intentes rodear el control. Una acción enviada a aprobación todavía no se ha hecho.',
     '- Responde siempre en español.',
-    '- Termina con un resumen final breve: qué has hecho, qué queda pendiente y por qué.',
+    '- Termina con un resumen final breve en texto plano (sin markdown, sin negritas, sin listas con viñetas y sin emojis), de 2 a 5 frases cortas: qué has hecho, qué queda pendiente y por qué.',
   ].join('\n');
   return manifest.prompt.trim() ? `${preamble}\n\n${manifest.prompt.trim()}` : preamble;
 }

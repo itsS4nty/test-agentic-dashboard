@@ -167,3 +167,123 @@ export interface Ticket {
 export interface SoporteSnapshot {
   tickets: Ticket[];
 }
+
+// ── Plataforma: agente creador ──────────────────────────────
+// Entrada de `POST /api/agent-requests` (réplica de `projects/plataforma/spec.ts`, fuente de verdad)
+// y snapshot de `GET /api/projects/plataforma`.
+
+export type AgentTrigger = 'manual' | 'event';
+export type ConnectionKind = 'http' | 'webhook';
+export type OperationAccess = 'read' | 'write';
+export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+export type AgentSpecTier = 'fast' | 'reasoning';
+
+export interface OperationSpec {
+  name: string;
+  description: string;
+  access: OperationAccess;
+  money?: boolean;
+  method?: HttpMethod;
+  path?: string;
+}
+
+export interface ConnectionSpec {
+  /** 2–40 */
+  name: string;
+  kind: ConnectionKind;
+  /** ≤ 300 */
+  description: string;
+  /** 1–8 */
+  operations: OperationSpec[];
+}
+
+export interface AgentSpec {
+  /** 3–60 */
+  name: string;
+  /** Slug `^[a-z][a-z0-9-]{2,29}$`; si falta, el servidor lo deriva de `name`. */
+  id?: string;
+  /** Qué debe hacer, en lenguaje natural: 20–4000. */
+  purpose: string;
+  trigger: AgentTrigger;
+  /** Con `trigger: 'event'`: un evento de dominio existente (docs/CONTRACTS.md § 5). */
+  event?: string;
+  /** 0–6; la IA propone las que falten a partir de `purpose`. */
+  connections: ConnectionSpec[];
+  /** Procedimientos, reglas y tono: ≤ 8000. */
+  context: string;
+  tier: AgentSpecTier;
+  /** 0,05–5 US$ por caso. */
+  budgetUsd: number;
+  /** 3–25 */
+  maxTurns: number;
+  /** 2–60 */
+  owner: string;
+}
+
+/** Error de validación de un campo. `field` con puntos o corchetes: `connections[0].operations[1].name`. */
+export interface SpecError {
+  field: string;
+  message: string;
+}
+
+export interface AgentRequestCreated {
+  requestId: string;
+  caseId: string;
+  message: string;
+}
+
+export type AgentRequestStatus = 'queued' | 'working' | 'pr_open' | 'merged' | 'active' | 'closed' | 'failed';
+
+export interface AgentRequest {
+  id: string;
+  caseId: string;
+  name: string;
+  agentId: string;
+  createdAt: string;
+  status: AgentRequestStatus;
+  prId?: string;
+  error?: string;
+}
+
+export interface AgentPrFile {
+  path: string;
+  status: 'added' | 'modified';
+}
+
+export interface ValidationStep {
+  name: string;
+  ok: boolean;
+  output: string;
+}
+
+export interface AgentActivation {
+  state: 'active' | 'restart_required';
+  detail: string;
+}
+
+export interface AgentPr {
+  id: string;
+  title: string;
+  branch: string;
+  agentId: string;
+  caseId: string;
+  status: 'open' | 'merged' | 'closed';
+  createdAt: string;
+  mergedAt?: string;
+  files: AgentPrFile[];
+  diff: string;
+  validation: { ok: boolean; steps: ValidationStep[] };
+  envVars: string[];
+  activation?: AgentActivation;
+  github?: { number: number; url: string };
+}
+
+export interface PlataformaSnapshot {
+  mode: 'local' | 'github';
+  remote?: { repo: string; url: string };
+  /** GitHub configurado pero no utilizable: por qué se trabaja en local. */
+  warning?: string;
+  baseBranch: string;
+  requests: AgentRequest[];
+  prs: AgentPr[];
+}

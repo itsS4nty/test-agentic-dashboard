@@ -5,6 +5,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import type { ServerResponse } from 'node:http';
 import { AUTONOMY_ORDER } from '../platform/contracts.ts';
+import { submitAgentRequest } from '../projects/plataforma/index.ts';
 import type {
   ActionPolicy,
   ApprovalStatus,
@@ -293,6 +294,13 @@ export function registerRoutes(app: FastifyInstance, platform: PlatformApi): voi
     const response: { message: string; caseIds?: string[] } = { message: outcome.message };
     if (outcome.caseIds?.length) response.caseIds = outcome.caseIds;
     return response;
+  });
+
+  // ── Agente creador de agentes ─────────────────────────────
+  app.post('/api/agent-requests', async (request, reply) => {
+    const result = submitAgentRequest(platform, request.body);
+    if (!result.ok) return reply.code(400).send({ error: 'La especificación no es válida.', errors: result.errors });
+    return reply.code(201).send({ requestId: result.requestId, caseId: result.caseId, message: result.message });
   });
 
   app.post('/api/reset', async () => {
