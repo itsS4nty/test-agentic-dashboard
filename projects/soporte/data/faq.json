@@ -1,0 +1,42 @@
+{
+  "faqs": [
+    {
+      "id": "cambio-rollo-papel",
+      "title": "Cambiar el rollo de papel de la impresora de tickets",
+      "phrasings": [
+        "como cambio el rollo",
+        "como se cambia el rollo",
+        "como cambiar el rollo",
+        "como pongo el rollo",
+        "como se pone el rollo",
+        "como cambio el papel de la impresora",
+        "como se cambia el papel de la impresora"
+      ],
+      "answer": "Hola, {nombre}:\n\nCambiar el rollo es sencillo y no hay nada que se pueda romper:\n\n1. Abre la tapa de la impresora tirando de la pestaña frontal.\n2. Saca el rollo gastado.\n3. Coloca el nuevo con la cara brillante hacia el cabezal: es papel térmico y solo imprime por esa cara (si se pone al revés, los tickets salen en blanco).\n4. Deja asomar unos centímetros de papel y cierra la tapa hasta oír el clic.\n5. Pulsa el botón de avance para comprobar que sale bien.\n\nSi después de esto algo no va, responde a este mensaje y te ayudamos.\n\nUn saludo,\nEquipo de soporte"
+    },
+    {
+      "id": "horario-soporte",
+      "title": "Horario del equipo de soporte",
+      "phrasings": [
+        "horario de soporte",
+        "horario del soporte",
+        "horario de atencion",
+        "a que hora abre soporte",
+        "hasta que hora hay soporte"
+      ],
+      "answer": "Hola, {nombre}:\n\nEl equipo de soporte atiende de lunes a sábado de 6:00 a 22:00, y domingos y festivos de 7:00 a 15:00. Fuera de ese horario, la plataforma sigue vigilando los datáfonos de la tienda y puedes dejarnos un mensaje como este: lo vemos a primera hora.\n\nUn saludo,\nEquipo de soporte"
+    },
+    {
+      "id": "copia-factura",
+      "title": "Descargar una copia de la factura",
+      "phrasings": [
+        "como descargo la factura",
+        "donde descargo la factura",
+        "como descargo una factura",
+        "donde veo mis facturas",
+        "como consigo una copia de la factura"
+      ],
+      "answer": "Hola, {nombre}:\n\nPuedes descargar cualquier factura desde el panel de cliente, en «Facturación › Mis facturas»: elige el mes y pulsa «Descargar PDF». Si necesitas que la enviemos a otra dirección de correo, respóndenos indicando cuál.\n\nUn saludo,\nEquipo de soporte"
+    }
+  ]
+}

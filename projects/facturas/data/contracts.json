@@ -1,0 +1,376 @@
+{
+  "catalog": {
+    "categories": [
+      {
+        "id": "licencias",
+        "name": "Licencias de software",
+        "vatRate": 21
+      },
+      {
+        "id": "mantenimiento",
+        "name": "Mantenimiento de equipos",
+        "vatRate": 21
+      },
+      {
+        "id": "soporte",
+        "name": "Soporte y asistencia",
+        "vatRate": 21
+      },
+      {
+        "id": "conectividad",
+        "name": "Conectividad",
+        "vatRate": 21
+      },
+      {
+        "id": "hardware",
+        "name": "Equipos de punto de venta",
+        "vatRate": 21
+      },
+      {
+        "id": "consumibles",
+        "name": "Consumibles de tienda",
+        "vatRate": 21
+      },
+      {
+        "id": "formacion",
+        "name": "Formación",
+        "vatRate": 21
+      }
+    ],
+    "products": [
+      {
+        "sku": "LIC-TPV",
+        "name": "Licencia de software TPV",
+        "category": "licencias",
+        "unit": "tienda/mes"
+      },
+      {
+        "sku": "LIC-OBR",
+        "name": "Licencia módulo de obrador y producción",
+        "category": "licencias",
+        "unit": "mes"
+      },
+      {
+        "sku": "LIC-FID",
+        "name": "Licencia módulo de fidelización",
+        "category": "licencias",
+        "unit": "tienda/mes"
+      },
+      {
+        "sku": "MNT-TPV",
+        "name": "Mantenimiento de equipos TPV",
+        "category": "mantenimiento",
+        "unit": "tienda/mes"
+      },
+      {
+        "sku": "SOP-PRE",
+        "name": "Soporte premium 7 días",
+        "category": "soporte",
+        "unit": "tienda/mes"
+      },
+      {
+        "sku": "SOP-EST",
+        "name": "Soporte estándar en días laborables",
+        "category": "soporte",
+        "unit": "tienda/mes"
+      },
+      {
+        "sku": "CON-4G",
+        "name": "Conectividad 4G de respaldo",
+        "category": "conectividad",
+        "unit": "tienda/mes"
+      },
+      {
+        "sku": "VIS-TEC",
+        "name": "Visita técnica fuera de contrato",
+        "category": "mantenimiento",
+        "unit": "visita"
+      },
+      {
+        "sku": "HW-DAT",
+        "name": "Datáfono Android con impresora",
+        "category": "hardware",
+        "unit": "unidad"
+      },
+      {
+        "sku": "HW-IMP",
+        "name": "Impresora de tickets térmica",
+        "category": "hardware",
+        "unit": "unidad"
+      },
+      {
+        "sku": "PAP-TER",
+        "name": "Papel térmico 80 mm (caja de 50 rollos)",
+        "category": "consumibles",
+        "unit": "caja"
+      },
+      {
+        "sku": "ETQ-ALE",
+        "name": "Etiquetas de alérgenos (rollo de 1.000)",
+        "category": "consumibles",
+        "unit": "rollo"
+      },
+      {
+        "sku": "FOR-HOR",
+        "name": "Formación presencial",
+        "category": "formacion",
+        "unit": "hora"
+      }
+    ]
+  },
+  "contracts": [
+    {
+      "clientId": "horno-real",
+      "number": "CT-HR-2024-017",
+      "signedAt": "2024-03-01",
+      "validUntil": "2027-02-28",
+      "billing": "Cuotas mensuales a mes vencido, una factura por tienda. Pedidos y visitas se facturan al entregarse.",
+      "paymentTerms": "Transferencia a 30 días",
+      "serviceScope": "Software de punto de venta para panadería, mantenimiento y soporte de los equipos de venta instalados en tienda (TPV, datáfonos, impresoras de tickets y router), suministro de consumibles de tienda y formación en el uso del software. No incluye maquinaria de obrador (hornos, cámaras, amasadoras) ni balanzas.",
+      "discountPolicy": "El contrato no prevé descuentos. Cualquier descuento o bonificación requiere acuerdo por escrito firmado por ambas partes.",
+      "rates": [
+        {
+          "sku": "LIC-TPV",
+          "unitPrice": 39
+        },
+        {
+          "sku": "LIC-OBR",
+          "unitPrice": 59
+        },
+        {
+          "sku": "MNT-TPV",
+          "unitPrice": 24
+        },
+        {
+          "sku": "SOP-PRE",
+          "unitPrice": 18
+        },
+        {
+          "sku": "VIS-TEC",
+          "unitPrice": 65
+        },
+        {
+          "sku": "HW-DAT",
+          "unitPrice": 289
+        },
+        {
+          "sku": "HW-IMP",
+          "unitPrice": 149
+        },
+        {
+          "sku": "PAP-TER",
+          "unitPrice": 32
+        },
+        {
+          "sku": "ETQ-ALE",
+          "unitPrice": 14.5
+        },
+        {
+          "sku": "FOR-HOR",
+          "unitPrice": 45
+        }
+      ],
+      "activeServices": [
+        {
+          "sku": "LIC-TPV",
+          "sites": [
+            "hr-centro",
+            "hr-ruzafa",
+            "hr-campanar",
+            "hr-benimaclet",
+            "hr-cabanyal",
+            "hr-patraix"
+          ]
+        },
+        {
+          "sku": "MNT-TPV",
+          "sites": [
+            "hr-centro",
+            "hr-ruzafa",
+            "hr-campanar",
+            "hr-benimaclet",
+            "hr-cabanyal",
+            "hr-patraix"
+          ]
+        },
+        {
+          "sku": "SOP-PRE",
+          "sites": [
+            "hr-centro",
+            "hr-ruzafa",
+            "hr-campanar",
+            "hr-benimaclet",
+            "hr-cabanyal",
+            "hr-patraix"
+          ]
+        },
+        {
+          "sku": "LIC-OBR",
+          "sites": [
+            "hr-centro"
+          ]
+        }
+      ]
+    },
+    {
+      "clientId": "forn-del-barri",
+      "number": "CT-FB-2025-004",
+      "signedAt": "2025-01-15",
+      "validUntil": "2027-01-14",
+      "billing": "Cuotas mensuales a mes vencido, una factura por tienda. Pedidos y visitas se facturan al entregarse.",
+      "paymentTerms": "Domiciliación bancaria a 15 días",
+      "serviceScope": "Software de punto de venta para panadería, mantenimiento y soporte de los equipos de venta instalados en tienda (TPV, datáfonos, impresoras de tickets y router), suministro de consumibles de tienda y formación en el uso del software. No incluye maquinaria de obrador (hornos, cámaras, amasadoras) ni balanzas.",
+      "discountPolicy": "El contrato no prevé descuentos. Cualquier descuento o bonificación requiere acuerdo por escrito firmado por ambas partes.",
+      "rates": [
+        {
+          "sku": "LIC-TPV",
+          "unitPrice": 42
+        },
+        {
+          "sku": "MNT-TPV",
+          "unitPrice": 26
+        },
+        {
+          "sku": "SOP-EST",
+          "unitPrice": 12
+        },
+        {
+          "sku": "CON-4G",
+          "unitPrice": 13
+        },
+        {
+          "sku": "VIS-TEC",
+          "unitPrice": 70
+        },
+        {
+          "sku": "HW-DAT",
+          "unitPrice": 299
+        },
+        {
+          "sku": "PAP-TER",
+          "unitPrice": 34
+        },
+        {
+          "sku": "ETQ-ALE",
+          "unitPrice": 15
+        }
+      ],
+      "activeServices": [
+        {
+          "sku": "LIC-TPV",
+          "sites": [
+            "fb-gracia",
+            "fb-sants",
+            "fb-poblenou"
+          ]
+        },
+        {
+          "sku": "MNT-TPV",
+          "sites": [
+            "fb-gracia",
+            "fb-sants",
+            "fb-poblenou"
+          ]
+        },
+        {
+          "sku": "SOP-EST",
+          "sites": [
+            "fb-gracia",
+            "fb-sants",
+            "fb-poblenou"
+          ]
+        },
+        {
+          "sku": "CON-4G",
+          "sites": [
+            "fb-gracia",
+            "fb-sants",
+            "fb-poblenou"
+          ]
+        }
+      ]
+    },
+    {
+      "clientId": "pan-de-pueblo",
+      "number": "CT-PP-2025-011",
+      "signedAt": "2025-06-01",
+      "validUntil": "2027-05-31",
+      "billing": "Cuotas mensuales a mes vencido, una factura por tienda. Pedidos y visitas se facturan al entregarse.",
+      "paymentTerms": "Transferencia a 30 días",
+      "serviceScope": "Software de punto de venta para panadería, mantenimiento y soporte de los equipos de venta instalados en tienda (TPV, datáfonos, impresoras de tickets y router), suministro de consumibles de tienda y formación en el uso del software. No incluye maquinaria de obrador (hornos, cámaras, amasadoras) ni balanzas.",
+      "discountPolicy": "El contrato no prevé descuentos. Cualquier descuento o bonificación requiere acuerdo por escrito firmado por ambas partes.",
+      "rates": [
+        {
+          "sku": "LIC-TPV",
+          "unitPrice": 40
+        },
+        {
+          "sku": "LIC-FID",
+          "unitPrice": 19
+        },
+        {
+          "sku": "MNT-TPV",
+          "unitPrice": 25
+        },
+        {
+          "sku": "SOP-EST",
+          "unitPrice": 12
+        },
+        {
+          "sku": "VIS-TEC",
+          "unitPrice": 60
+        },
+        {
+          "sku": "HW-DAT",
+          "unitPrice": 279
+        },
+        {
+          "sku": "HW-IMP",
+          "unitPrice": 145
+        },
+        {
+          "sku": "PAP-TER",
+          "unitPrice": 31.5
+        },
+        {
+          "sku": "FOR-HOR",
+          "unitPrice": 42
+        }
+      ],
+      "activeServices": [
+        {
+          "sku": "LIC-TPV",
+          "sites": [
+            "pp-alcala",
+            "pp-getafe",
+            "pp-mostoles"
+          ]
+        },
+        {
+          "sku": "LIC-FID",
+          "sites": [
+            "pp-alcala",
+            "pp-getafe",
+            "pp-mostoles"
+          ]
+        },
+        {
+          "sku": "MNT-TPV",
+          "sites": [
+            "pp-alcala",
+            "pp-getafe",
+            "pp-mostoles"
+          ]
+        },
+        {
+          "sku": "SOP-EST",
+          "sites": [
+            "pp-alcala",
+            "pp-getafe",
+            "pp-mostoles"
+          ]
+        }
+      ]
+    }
+  ]
+}
