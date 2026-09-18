@@ -85,8 +85,10 @@ export class PaymentTerminal {
     }
 
     if (response === TIMEOUT) {
-      // El lector no ha contestado a tiempo: se anula la operación en el dispositivo.
+      // El lector no ha contestado a tiempo: se anula la operación en el dispositivo
+      // y se libera el terminal para que acepte el siguiente cobro.
       this.device.cancel(transaction.id);
+      this.finish();
       return { status: 'timeout', transactionId: transaction.id, amountCents };
     }
 

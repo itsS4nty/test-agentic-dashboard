@@ -1,6 +1,6 @@
 {
   "name": "terminal-pagos",
-  "version": "2.14.2",
+  "version": "2.14.3",
   "description": "Software de cobro de los datáfonos de tienda: máquina de estados del terminal y protocolo con el lector.",
   "private": true,
   "type": "module",
