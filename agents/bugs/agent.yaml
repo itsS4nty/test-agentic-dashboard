@@ -1,0 +1,20 @@
+id: bugs
+name: Agente de código
+description: Investiga los bugs que sospecha operaciones en terminal-pagos, los reproduce con tests, propone el arreglo mínimo y abre un PR.
+version: 1
+project: bugs
+tier: reasoning
+effort: medium
+max_turns: 14
+budget:
+  tokens_per_case: 250000
+  usd_per_case: 2.50
+tools:
+  - bugs_list_files
+  - bugs_read_file
+  - bugs_search_code
+  - bugs_run_tests
+  - bugs_propose_fix
+  - bugs_open_pr
+  - bugs_merge_pr
+owner: Desarrollo

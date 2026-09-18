@@ -1,0 +1,20 @@
+id: dispositivos
+name: Agente de dispositivos
+description: Diagnostica incidencias de datáfonos, impresoras y routers en tienda cuando las reglas no bastan, y detecta patrones que apuntan a un fallo de software.
+version: 1
+project: dispositivo
+tier: reasoning        # reasoning | fast  → config/models.yaml
+effort: medium
+max_turns: 10
+budget:
+  tokens_per_case: 120000
+  usd_per_case: 1.00
+tools:
+  - dispositivo_get_fleet_status
+  - dispositivo_get_device
+  - dispositivo_get_device_history
+  - dispositivo_restart_device
+  - dispositivo_notify_store
+  - dispositivo_open_field_ticket
+  - dispositivo_report_suspected_bug
+owner: Operaciones

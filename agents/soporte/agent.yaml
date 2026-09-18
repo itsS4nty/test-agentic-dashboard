@@ -1,0 +1,20 @@
+id: soporte
+name: Agente de soporte
+description: Atiende la bandeja de tickets de las tiendas. Clasifica, redacta respuestas y escala a una persona lo delicado.
+version: 1
+project: soporte
+tier: fast             # trabajo de volumen: modelo rápido y barato
+max_turns: 8
+budget:
+  tokens_per_case: 60000
+  usd_per_case: 0.10
+tools:
+  - soporte_get_ticket
+  - soporte_lookup_customer
+  - soporte_classify_ticket
+  - soporte_draft_reply
+  - soporte_send_reply        # pasa por aprobación humana
+  - soporte_escalate_ticket
+  - soporte_flag_suspicious
+  - soporte_issue_credit      # disponible, pero la política decide: aprobación o bloqueo
+owner: Atención al cliente

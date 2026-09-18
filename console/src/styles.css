@@ -1,0 +1,336 @@
+/*
+ * Consola — tokens y base. Monocromo: el color solo comunica estado.
+ * Especificación: docs/DESIGN.md
+ */
+
+:root {
+  color-scheme: light;
+
+  --bg: #ffffff;
+  --bg-subtle: #fafafa;
+  --bg-muted: #f2f2f2;
+  --bg-hover: #f5f5f5;
+  --border: #ebebeb;
+  --border-strong: #d4d4d4;
+
+  --fg: #0a0a0a;
+  --fg-muted: #5c5c5c;
+  --fg-subtle: #737373;
+
+  --primary: #0a0a0a;
+  --primary-fg: #ffffff;
+
+  --success: #15803d;
+  --success-bg: #f0fdf4;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --danger: #b91c1c;
+  --danger-bg: #fef2f2;
+
+  --focus: #0a0a0a;
+  --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.1), 0 1px 3px rgb(0 0 0 / 0.06);
+
+  --font-sans: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+
+  --header-h: 56px;
+  --tabs-h: 44px;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0a0a0a;
+    --bg-subtle: #111111;
+    --bg-muted: #1a1a1a;
+    --bg-hover: #1f1f1f;
+    --border: #262626;
+    --border-strong: #3a3a3a;
+    --fg: #ededed;
+    --fg-muted: #a1a1a1;
+    --fg-subtle: #8a8a8a;
+    --primary: #ededed;
+    --primary-fg: #0a0a0a;
+    --success: #4ade80;
+    --success-bg: rgb(34 197 94 / 0.12);
+    --warning: #fbbf24;
+    --warning-bg: rgb(245 158 11 / 0.12);
+    --danger: #f87171;
+    --danger-bg: rgb(239 68 68 / 0.12);
+    --focus: #ededed;
+    --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.5), 0 0 0 1px #262626;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0a0a0a;
+  --bg-subtle: #111111;
+  --bg-muted: #1a1a1a;
+  --bg-hover: #1f1f1f;
+  --border: #262626;
+  --border-strong: #3a3a3a;
+  --fg: #ededed;
+  --fg-muted: #a1a1a1;
+  --fg-subtle: #8a8a8a;
+  --primary: #ededed;
+  --primary-fg: #0a0a0a;
+  --success: #4ade80;
+  --success-bg: rgb(34 197 94 / 0.12);
+  --warning: #fbbf24;
+  --warning-bg: rgb(245 158 11 / 0.12);
+  --danger: #f87171;
+  --danger-bg: rgb(239 68 68 / 0.12);
+  --focus: #ededed;
+  --shadow-overlay: 0 8px 30px rgb(0 0 0 / 0.5), 0 0 0 1px #262626;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--fg);
+  text-wrap: balance;
+}
+h1 {
+  font-size: var(--text-xl);
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: var(--text-md);
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: var(--text-base);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms var(--ease);
+}
+a:hover {
+  text-decoration-color: var(--fg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input[type='text'],
+input[type='search'],
+input:not([type]),
+select,
+textarea {
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-size: var(--text-base);
+  transition: border-color 150ms var(--ease);
+}
+textarea {
+  height: auto;
+  padding: 8px 10px;
+  resize: vertical;
+}
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--fg-subtle);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--fg-subtle);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+code,
+pre,
+kbd,
+samp,
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.93em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: var(--fg-muted);
+}
+.subtle {
+  color: var(--fg-subtle);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Tablas ─────────────────────────────────── */
+
+.table-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  background: var(--bg);
+}
+table.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+}
+table.table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--fg-muted);
+  background: var(--bg-subtle);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+table.table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+table.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+table.table tbody tr:hover td {
+  background: var(--bg-hover);
+}
+table.table th.num,
+table.table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Diff ───────────────────────────────────── */
+
+pre.diff {
+  margin: 0;
+  padding: 10px 0;
+  overflow-x: auto;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+pre.diff > span {
+  display: block;
+  padding: 0 16px;
+}
+.diff-add {
+  background: var(--success-bg);
+}
+.diff-del {
+  background: var(--danger-bg);
+}
+.diff-hunk {
+  color: var(--fg-muted);
+  background: var(--bg-muted);
+}
+
+/* ── Movimiento ─────────────────────────────── */
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

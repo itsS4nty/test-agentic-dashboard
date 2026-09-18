@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Consola de agentes</title>
+    <script>
+      // Tema guardado antes del primer pintado (misma clave y valores que src/ui/theme.ts): sin parpadeo.
+      try {
+        var tema = localStorage.getItem('consola.tema');
+        if (tema === 'light' || tema === 'dark') document.documentElement.setAttribute('data-theme', tema);
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+# El dial de autonomía.
+#
+# `level` es el TECHO de autonomía de cada acción: shadow < approve < notify < auto.
+# Las condiciones solo pueden bajar ese techo o bloquear (deny / escalate); nunca subirlo.
+# Acción sin entrada aquí: `auto` si es de lectura, `approve` en cualquier otro caso.
+# Los overrides se aplican en cascada: defecto → cliente → tienda.
+
+actions:
+  # ── Dispositivo ──────────────────────────────────────────────
+  - action: dispositivo_get_fleet_status
+    level: auto
+  - action: dispositivo_get_device
+    level: auto
+  - action: dispositivo_get_device_history
+    level: auto
+  - action: dispositivo_restart_device
+    level: auto
+    conditions:
+      - when: [transaction_in_flight]
+        decision: deny
+        label: Hay un cobro en curso en el terminal
+      - when: [restart_attempts_exceeded]
+        decision: escalate
+        label: Ya se ha reiniciado 3 veces en la última hora
+  - action: dispositivo_notify_store
+    level: notify
+  - action: dispositivo_open_field_ticket
+    level: approve
+  - action: dispositivo_report_suspected_bug
+    level: auto
+
+  # ── Código ─────────────────────────────────────────────
+  - action: bugs_list_files
+    level: auto
+  - action: bugs_read_file
+    level: auto
+  - action: bugs_search_code
+    level: auto
+  - action: bugs_run_tests
+    level: auto
+  - action: bugs_propose_fix
+    level: auto
+  - action: bugs_open_pr
+    level: auto
+  - action: bugs_merge_pr
+    level: approve
+
+  # ── Facturación ────────────────────────────────────────
+  - action: facturas_get_invoice
+    level: auto
+  - action: facturas_get_contract
+    level: auto
+  - action: facturas_record_finding
+    level: auto
+  - action: facturas_propose_correction
+    level: approve
+    conditions:
+      - when: [invoice_issued]
+        decision: escalate
+        label: La factura ya está emitida; hace falta rectificativa
+
+  # ── Soporte ────────────────────────────────────────────
+  - action: soporte_get_ticket
+    level: auto
+  - action: soporte_lookup_customer
+    level: auto
+  - action: soporte_classify_ticket
+    level: auto
+  - action: soporte_draft_reply
+    level: auto
+  - action: soporte_send_reply
+    level: approve
+  - action: soporte_escalate_ticket
+    level: auto
+  - action: soporte_flag_suspicious
+    level: auto
+  - action: soporte_issue_credit
+    level: approve
+    conditions:
+      - when: [injection_suspected]
+        decision: deny
+        label: El ticket contiene un intento de manipulación
+
+overrides:
+  # Pan de Pueblo pidió aprobar cualquier reinicio en sus tiendas.
+  - scope: { clientId: pan-de-pueblo }
+    action: dispositivo_restart_device
+    level: approve

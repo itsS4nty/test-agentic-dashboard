@@ -1,0 +1,17 @@
+id: facturacion
+name: Agente de facturación
+description: Revisa con criterio las facturas que las reglas no pueden decidir, cuantifica el impacto y propone correcciones.
+version: 1
+project: facturas
+tier: reasoning
+effort: medium
+max_turns: 8
+budget:
+  tokens_per_case: 100000
+  usd_per_case: 0.80
+tools:
+  - facturas_get_invoice
+  - facturas_get_contract
+  - facturas_record_finding
+  - facturas_propose_correction
+owner: Administración

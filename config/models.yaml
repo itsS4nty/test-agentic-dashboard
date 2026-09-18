@@ -1,0 +1,15 @@
+# Un solo sitio para cambiar de modelo.
+# Los agentes piden un "tier" en su manifiesto; nunca un ID de modelo.
+tiers:
+  reasoning:
+    anthropic: claude-opus-5
+    bedrock: anthropic.claude-opus-5
+    # USD por millón de tokens (tarifa de la API de Anthropic; en Bedrock es orientativo)
+    pricing: { input: 5, output: 25 }
+  fast:
+    anthropic: claude-haiku-4-5
+    bedrock: anthropic.claude-haiku-4-5
+    pricing: { input: 1, output: 5 }
+
+bedrock:
+  region: eu-west-1
