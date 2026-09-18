@@ -1,8 +1,10 @@
-# Guion de la demo (12–15 minutos)
+# Guion de la demo (15–18 minutos)
 
 Guion paso a paso para enseñar la consola en una reunión. En cada paso se indica la pestaña, el botón
 exacto del **Director de demo**, qué se ve y qué decir. Los tiempos de espera están medidos en modo
-simulado.
+simulado. Con Claude real (ensayo del 18/09) son más largos: la ola, unos 70 s hasta el PR; facturas,
+unos 30 s; la bandeja de soporte, unos 25 s; crear un agente, unos 40 s hasta el PR. Una demo completa
+con IA real cuesta alrededor de 1,75 US$.
 
 ## Antes de empezar (5 minutos antes)
 
@@ -51,7 +53,8 @@ pestaña **Casos**.
 | 10:00 | 6 · Facturas: reglas frente a IA |
 | 11:30 | 7 · Soporte: inyección y prueba de fuego |
 | 13:00 | 8 · Agentes |
-| 14:00 | Cierre con métricas |
+| 14:00 | 9 · Crear un agente desde la consola |
+| 17:00 | Cierre con métricas |
 
 ---
 
@@ -267,6 +270,29 @@ pestaña **Casos**.
   por caso y qué herramientas puede pedir, que siempre pasan por el dial. Si el trabajo necesita una
   herramienta nueva, se añade al proyecto y se le da un nivel en el dial. El modelo se cambia en un
   único fichero.»
+
+## Paso 9 · Crear un agente desde la consola (3 min)
+
+- **Pestaña:** Crear agente (o el botón **Crear agente** de la pestaña Agentes).
+- **Qué se hace:** rellena el formulario en directo (el botón **Rellenar con un ejemplo** lo deja listo
+  para retocar) o lanza el escenario «Crear un agente de ejemplo» del Director de demo (pedidos del obrador: una API del ERP con tres
+  operaciones y un webhook de Slack). En el formulario se indica qué debe hacer, cuándo actúa,
+  las conexiones con sus operaciones (lectura o escritura, y si mueven dinero), el contexto del
+  negocio, el modelo, el presupuesto y el responsable. Pulsa **Crear agente**.
+- **Qué se ve:** debajo, «Propuestas de agentes» con la solicitud: En cola → La IA está escribiendo
+  el agente → PR abierto (unos 40 s con Claude real). El detalle muestra los 7 ficheros del PR
+  (manifiesto, prompt, herramientas, index del proyecto, políticas, `.env.example` y registro), la
+  validación de la plataforma paso a paso, las variables nuevas y el diff. Con GitHub conectado, el
+  PR está también en el repositorio con enlace directo.
+- **Aprobar:** la barra «La fusión espera a una persona» lleva a Aprobaciones. Al aprobar, el PR se
+  fusiona y el agente queda **activo sin reiniciar**: aparece en Agentes, sus herramientas en El dial
+  (lecturas en *Hace sola*, escrituras en *Pide permiso*) y un escenario «Probar …» en el Director.
+- **Qué decir:** «Esto es cómo crece la plataforma: alguien de negocio describe el agente, la IA escribe
+  el código usando solo los conectores de la plataforma, y la plataforma decide lo delicado: nombres,
+  riesgo y nivel de autonomía de cada herramienta, qué variables hacen falta. Nada entra sin validar
+  y sin que una persona apruebe el PR. Las escrituras nacen pidiendo permiso; ya se subirán en el dial
+  cuando se ganen la confianza.»
+- **Si no hay tiempo:** enseña un PR ya creado y aprueba la fusión en directo.
 
 ## Cierre con métricas (1 min)
 
