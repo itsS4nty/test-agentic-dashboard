@@ -14,5 +14,4 @@ tools:
   - plataforma_write_file
   - plataforma_validate
   - plataforma_open_pr
-  - plataforma_merge_pr
 owner: Plataforma

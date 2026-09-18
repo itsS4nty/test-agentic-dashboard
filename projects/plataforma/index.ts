@@ -7,7 +7,7 @@ import { draftManifest, draftPrompt, draftTools, plan } from './generate.ts';
 import { validateSpec } from './spec.ts';
 import type { AgentSpec, SpecError } from './spec.ts';
 import { AGENT_ID, PROJECT_ID, getState, requestForCase, resetState, saveState } from './state.ts';
-import { baseBranch, plataformaTools, repoDir } from './tools.ts';
+import { baseBranch, plataformaTools, repoDir, syncAgentPrs } from './tools.ts';
 import { githubTarget } from './git.ts';
 
 /** Ids que no puede usar un agente nuevo: agentes, proyectos y solicitudes en curso. */
@@ -51,7 +51,7 @@ export function submitAgentRequest(
     caseId: record.id,
     task:
       `Nueva solicitud ${requestId}: crear el agente «${spec.name}» (${spec.id}). ` +
-      'Lee la solicitud, escribe los tres ficheros, valida hasta que salga correcta, abre el PR y pide la fusión.',
+      'Lee la solicitud, escribe los tres ficheros, valida hasta que salga correcta y abre el PR. La fusión la hace una persona.',
   });
   return { ok: true, requestId, caseId: record.id, message: `Solicitud ${requestId} enviada al agente creador.` };
 }
@@ -90,16 +90,12 @@ const creadorMock: MockScript = (ctx) => {
       ],
     };
   }
-  if (last?.name === 'plataforma_open_pr' && last.ok) {
-    const prId = (last.data as { prId: string }).prId;
-    return { text: 'Pido la fusión.', toolCalls: [{ name: 'plataforma_merge_pr', input: { prId } }] };
-  }
   const pr = getState(ctx.platform).prs.find((x) => x.requestId === request.id);
   return {
     text:
-      `He creado el agente ${spec.name} (${p.agentId}) con ${p.tools.length} herramientas y abierto el PR ${pr?.id ?? ''}.\n` +
-      (pr?.status === 'merged' ? 'El PR está fusionado.' : 'Pendiente: una persona tiene que aprobar la fusión.') +
-      (p.envVars.length ? `\nAntes de usarlo hay que rellenar en .env: ${p.envVars.join(', ')}.` : ''),
+      `He creado el agente ${spec.name} (${p.agentId}) con ${p.tools.length} herramientas y he abierto el PR ${pr?.id ?? ''}. ` +
+      'Pendiente: que una persona lo revise y lo fusione; la plataforma activará el agente al detectarlo.' +
+      (p.envVars.length ? ` Antes de usarlo hay que rellenar en .env: ${p.envVars.join(', ')}.` : ''),
   };
 };
 
@@ -151,6 +147,10 @@ const crearScenario: Scenario = {
   },
 };
 
+const POLL_MS = 10_000;
+let poller: ReturnType<typeof setInterval> | undefined;
+let polling = false;
+
 let cachedMode: { mode: 'local' | 'github'; remote?: { repo: string; url: string }; base: string } | null = null;
 
 async function refreshMode(platform: PlatformApi) {
@@ -173,6 +173,21 @@ export const plataforma: ProjectModule = {
   init: async (platform) => {
     getState(platform);
     await refreshMode(platform);
+    // Sondeo de los PR en GitHub: cuando una persona fusiona, se trae el código y se activa el agente.
+    if (!platform.fast && cachedMode?.mode === 'github') {
+      poller = setInterval(() => {
+        if (polling) return;
+        polling = true;
+        syncAgentPrs(platform)
+          .catch((err) => console.warn('[plataforma] Sondeo de PR:', err))
+          .finally(() => (polling = false));
+      }, POLL_MS);
+      poller.unref?.();
+    }
+  },
+  stop: () => {
+    if (poller) clearInterval(poller);
+    poller = undefined;
   },
   reset: async (platform) => {
     resetState(platform);

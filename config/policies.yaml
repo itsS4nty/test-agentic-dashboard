@@ -90,8 +90,6 @@ actions:
     level: auto
   - action: plataforma_open_pr
     level: auto
-  - action: plataforma_merge_pr
-    level: approve
 
 
 overrides:

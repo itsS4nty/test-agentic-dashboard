@@ -411,13 +411,11 @@ const blocks: Block[] = [
       check('el creador abre un PR con la validación correcta', pr?.validation?.ok, pr?.validation?.steps);
       check('el PR trae manifiesto, prompt, herramientas y fontanería', pr?.files?.length === 7, pr?.files?.map((f: any) => f.path));
       check('las variables nuevas van a .env.example', pr?.envVars?.includes('PEDIDOS_OBRADOR_ERP_OBRADOR_URL'), pr?.envVars);
-      const approval = platform.approvals.list({ status: 'pending' }).find((a) => a.tool === 'plataforma_merge_pr');
-      check('la fusión espera aprobación', approval, platform.approvals.list({}).map((a) => a.tool));
-      if (approval) {
-        await platform.approvals.decide(approval.id, 'approved', 'smoke');
-        await settle(platform, 2);
-      }
-      check('tras aprobar, el PR queda fusionado', snap().prs[0]?.status === 'merged', snap().prs[0]?.activation);
+      check('el creador no fusiona: no pide aprobación de fusión', !platform.approvals.list({}).some((a) => a.tool.startsWith('plataforma_')), platform.approvals.list({}).map((a) => a.tool));
+      // Una persona fusiona el PR (en local, sin GitHub): la plataforma lo trae y lo activa.
+      const { completeMerge } = await import('../projects/plataforma/tools.ts');
+      if (pr) await completeMerge(platform, pr.id);
+      check('tras la fusión manual, el PR queda fusionado', snap().prs[0]?.status === 'merged', snap().prs[0]?.activation);
       const invalid = await import('../projects/plataforma/index.ts').then((m) => m.submitAgentRequest(platform, { name: 'x' }));
       check('una especificación incompleta se rechaza campo a campo', !invalid.ok && invalid.errors.length >= 3, invalid);
     },

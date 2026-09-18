@@ -104,13 +104,15 @@ const validationOk = computed(() => pr.value?.validation.ok ?? false);
       <CaseLink :case-id="request.caseId" label="Ver caso" />
     </div>
     <template v-else-if="pr">
-      <div v-if="pr.status === 'open' && approval" class="callout" role="status">
-        <StatusDot status="warning" label="La fusión espera a una persona." />
-        <Button as="a" href="#aprobaciones" variant="primary" size="sm">Ir a Aprobaciones</Button>
+      <div v-if="pr.status === 'open' && pr.github" class="callout" role="status">
+        <StatusDot status="warning">
+          PR abierto en GitHub. <span class="callout__muted">Revísalo y fusiónalo allí; el agente se activa solo al detectarlo.</span>
+        </StatusDot>
+        <Button as="a" :href="pr.github.url" target="_blank" rel="noopener" variant="primary" size="sm">Abrir en GitHub</Button>
       </div>
       <div v-else-if="pr.status === 'open'" class="callout" role="status">
         <StatusDot status="neutral">
-          PR abierto. <span class="callout__muted">Fusionarlo pide permiso a una persona.</span>
+          PR abierto en local. <span class="callout__muted">Lo fusiona una persona; sin GitHub conectado, no hay dónde hacerlo.</span>
         </StatusDot>
       </div>
       <div v-else-if="pr.status === 'merged' && pr.activation?.state === 'active'" class="callout" role="status">

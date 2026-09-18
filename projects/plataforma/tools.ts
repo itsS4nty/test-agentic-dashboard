@@ -44,7 +44,15 @@ async function ensureWorktree(platform: PlatformApi, requestId: string, agentId:
   const exists = await git(repo, ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`]).then(() => true, () => false);
   if (exists) branch = `${branch}-${requestId.toLowerCase()}`;
   mkdirSync(dirname(dir), { recursive: true });
-  await git(repo, ['worktree', 'add', '-b', branch, dir, 'HEAD']);
+  // Con GitHub, la rama sale de la base del remoto: el PR solo lleva el agente nuevo.
+  let from = 'HEAD';
+  const target = await githubTarget(repo);
+  if (target) {
+    const base = await baseBranch(platform);
+    await git(repo, ['fetch', '--no-tags', 'origin', `+refs/heads/${base}:refs/remotes/origin/${base}`], authEnv(target.token));
+    from = `origin/${base}`;
+  }
+  await git(repo, ['worktree', 'add', '-b', branch, dir, from]);
   return dir;
 }
 
@@ -300,7 +308,7 @@ const openPr: ToolDefinition<{ title: string; body: string }> = {
           `${input.body}\n\n` +
           `Validación de la plataforma:\n${validation.steps.map((s) => `- ${s.ok ? '✅' : '❌'} ${s.name}: ${s.output}`).join('\n')}\n\n` +
           (p.envVars.length ? `Variables a configurar en .env: ${p.envVars.map((v) => `\`${v}\``).join(', ')}\n\n` : '') +
-          `Solicitud ${request.id} · caso ${request.caseId}\n\n🤖 Generado por el agente creador de la plataforma`;
+          `Se fusiona a mano: revísalo y pulsa Merge. La plataforma lo detecta y activa el agente sin reiniciar.\n\nSolicitud ${request.id} · caso ${request.caseId}\n\n🤖 Generado por el agente creador de la plataforma`;
         const { data } = await octokit(target).pulls.create({ owner: target.owner, repo: target.repo, title: input.title, head: branch, base, body });
         pr.github = { number: data.number, url: data.html_url };
       } catch (err) {
@@ -312,13 +320,15 @@ const openPr: ToolDefinition<{ title: string; body: string }> = {
     updateRequest(platform, request.id, { status: 'pr_open', prId: pr.id });
     return {
       ok: true,
-      content: `PR ${pr.id} abierto${pr.github ? ` en GitHub (#${pr.github.number}, ${pr.github.url})` : ' en local'}: ${files.length} ficheros en ${branch} contra ${base}.`,
+      content:
+        `PR ${pr.id} abierto${pr.github ? ` en GitHub (#${pr.github.number}, ${pr.github.url})` : ' en local'}: ${files.length} ficheros en ${branch} contra ${base}. ` +
+        'Lo revisa y lo fusiona una persona; la plataforma activa el agente al detectar la fusión.',
       data: { prId: pr.id, github: pr.github },
     };
   },
 };
 
-// ── 5. Fusionar (con aprobación) y activar ────────────────────────────────
+// ── 5. Fusión manual en GitHub: detección y activación ───────────────────
 
 async function activate(platform: PlatformApi, pr: AgentPr): Promise<AgentPr['activation']> {
   const repo = repoDir(platform);
@@ -339,56 +349,67 @@ async function activate(platform: PlatformApi, pr: AgentPr): Promise<AgentPr['ac
   }
 }
 
-const mergePr: ToolDefinition<{ prId: string }> = {
-  name: 'plataforma_merge_pr',
-  project: PROJECT_ID,
-  description: 'Fusiona el PR del agente en la rama base y lo activa. Siempre pasa por la aprobación de una persona.',
-  risk: 'code',
-  inputSchema: { type: 'object', properties: { prId: { type: 'string', description: 'Id del PR (APR-...).' } }, required: ['prId'] },
-  describe: (input, platform) => {
-    const pr = getState(platform).prs.find((x) => x.id === input.prId);
-    return `Fusionar ${input.prId}${pr ? `: ${pr.title}` : ''}${pr?.github ? ` (GitHub #${pr.github.number})` : ''}`;
-  },
-  async handler(input, { platform }) {
-    const state = getState(platform);
-    const pr = state.prs.find((x) => x.id === input.prId);
-    if (!pr) return fail(`No existe el PR ${input.prId}.`);
-    if (pr.status !== 'open') return fail(`El PR ${pr.id} ya está ${pr.status === 'merged' ? 'fusionado' : 'cerrado'}.`);
-    const repo = repoDir(platform);
-    const base = await baseBranch(platform);
-    let note = '';
+/**
+ * Cierre de un PR que una persona ha fusionado (en GitHub, o a mano en local): trae el código a
+ * esta copia (solo avance rápido) y activa el agente sin reiniciar. Idempotente.
+ */
+export async function completeMerge(platform: PlatformApi, prId: string): Promise<AgentPr | undefined> {
+  const state = getState(platform);
+  const pr = state.prs.find((x) => x.id === prId);
+  if (!pr || pr.status !== 'open') return pr;
+  const repo = repoDir(platform);
+  const base = await baseBranch(platform);
+  let note = '';
+  try {
+    const target = pr.github ? await githubTarget(repo) : null;
+    const current = await git(repo, ['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (current !== base) note = `La copia local está en ${current}, no en ${base}.`;
+    else if (target) await git(repo, ['pull', '--ff-only', '--no-rebase', 'origin', base], authEnv(target.token));
+    else await git(repo, ['merge', '--no-edit', pr.branch]);
+  } catch (err) {
+    note = `No se pudo actualizar la copia local: ${clean((err as Error).message)}`;
+  }
+  pr.status = 'merged';
+  pr.mergedAt = new Date().toISOString();
+  pr.activation = note ? { state: 'restart_required', detail: note } : await activate(platform, pr);
+  saveState(platform, state);
+  updateRequest(platform, pr.requestId, { status: pr.activation?.state === 'active' ? 'active' : 'merged' });
+  if (platform.cases.get(pr.caseId)) {
+    platform.cases.addTimeline(pr.caseId, {
+      kind: 'note',
+      actor: 'human',
+      title: `${pr.id}${pr.github ? ` (#${pr.github.number})` : ''} fusionado por una persona`,
+      detail: pr.activation?.state === 'active' ? 'Agente activo sin reiniciar.' : `Pendiente de reinicio: ${pr.activation?.detail}`,
+    });
+  }
+  rmSync(worktreeDir(platform, pr.requestId), { recursive: true, force: true });
+  await git(repo, ['worktree', 'prune']).catch(() => undefined);
+  return pr;
+}
+
+/** Un sondeo de los PR abiertos en GitHub. Devuelve si queda alguno abierto. */
+export async function syncAgentPrs(platform: PlatformApi): Promise<boolean> {
+  const open = getState(platform).prs.filter((pr) => pr.status === 'open' && pr.github);
+  if (!open.length) return false;
+  const target = await githubTarget(repoDir(platform));
+  if (!target) return false;
+  for (const pr of open) {
     try {
-      if (pr.github) {
-        const target = await githubTarget(repo);
-        if (!target) return fail('El PR está en GitHub pero no hay GITHUB_TOKEN configurado.');
-        await octokit(target).pulls.merge({ owner: target.owner, repo: target.repo, pull_number: pr.github.number, merge_method: 'merge' });
-        const current = await git(repo, ['rev-parse', '--abbrev-ref', 'HEAD']);
-        if (current === base) {
-          await git(repo, ['pull', '--ff-only', '--no-rebase', 'origin', base], authEnv(target.token)).catch((err) => {
-            note = ` No se pudo actualizar la copia local: ${(err as Error).message}`;
-          });
-        }
-      } else {
-        await git(repo, ['merge', '--no-edit', pr.branch]);
+      const { data } = await octokit(target).pulls.get({ owner: target.owner, repo: target.repo, pull_number: pr.github!.number });
+      if (data.merged) await completeMerge(platform, pr.id);
+      else if (data.state === 'closed') {
+        const state = getState(platform);
+        const current = state.prs.find((x) => x.id === pr.id);
+        if (current) current.status = 'closed';
+        saveState(platform, state);
+        updateRequest(platform, pr.requestId, { status: 'closed' });
       }
     } catch (err) {
-      return fail(`No se pudo fusionar: ${clean((err as Error).message)}`);
+      console.warn(`[plataforma] No se puede consultar ${pr.id} en GitHub: ${clean((err as Error).message)}`);
     }
-    pr.status = 'merged';
-    pr.mergedAt = new Date().toISOString();
-    pr.activation = await activate(platform, pr);
-    if (note) pr.activation = { state: 'restart_required', detail: note.trim() };
-    saveState(platform, state);
-    updateRequest(platform, pr.requestId, { status: pr.activation?.state === 'active' ? 'active' : 'merged' });
-    rmSync(worktreeDir(platform, pr.requestId), { recursive: true, force: true });
-    await git(repo, ['worktree', 'prune']).catch(() => undefined);
-    return {
-      ok: true,
-      content: `PR ${pr.id} fusionado en ${base}. ${pr.activation?.state === 'active' ? 'Agente activo.' : `Pendiente de reinicio: ${pr.activation?.detail}`}`,
-      data: { prId: pr.id, activation: pr.activation },
-    };
-  },
-};
+  }
+  return getState(platform).prs.some((pr) => pr.status === 'open' && pr.github);
+}
 
-export const plataformaTools: ToolDefinition[] = [getRequest, writeFile, validateTool, openPr, mergePr];
+export const plataformaTools: ToolDefinition[] = [getRequest, writeFile, validateTool, openPr];
 export { AGENT_ID };
