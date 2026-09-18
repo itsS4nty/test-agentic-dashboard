@@ -42,8 +42,6 @@ actions:
     level: auto
   - action: bugs_open_pr
     level: auto
-  - action: bugs_merge_pr
-    level: approve
 
   # ── Facturación ────────────────────────────────────────
   - action: facturas_get_invoice

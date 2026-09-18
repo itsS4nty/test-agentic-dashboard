@@ -1,6 +1,6 @@
 id: bugs
 name: Agente de código
-description: Investiga los bugs que sospecha operaciones en terminal-pagos, los reproduce con tests, propone el arreglo mínimo y abre un PR.
+description: Investiga los bugs que sospecha operaciones en terminal-pagos, los reproduce con tests, propone el arreglo mínimo y abre un PR (lo fusiona una persona a mano en GitHub).
 version: 1
 project: bugs
 tier: reasoning
@@ -16,5 +16,4 @@ tools:
   - bugs_run_tests
   - bugs_propose_fix
   - bugs_open_pr
-  - bugs_merge_pr
 owner: Desarrollo

@@ -1,24 +1,15 @@
 /**
  * Seguimiento de los PRs abiertos en GitHub: estado (abierto, fusionado, cerrado) y, si el
- * repositorio tiene CI, su resultado. La demo no añade ninguna: entonces el estado es `none` y lo
- * único que sigue el sondeo es el PR.
+ * repositorio tiene CI, su resultado.
  *
- * Si alguien fusiona el PR directamente en GitHub, se hace el mismo cierre que al aprobar la fusión en
- * la consola (versión nueva, `code.fix_merged`) y la aprobación pendiente se resuelve como aprobada por
- * «GitHub». Si lo cierra sin fusionar, el PR queda cerrado y la aprobación, rechazada.
+ * El agente nunca fusiona: los PRs los fusiona una persona a mano en GitHub. Cuando el sondeo ve un PR
+ * fusionado, hace el cierre en local sin tocar GitHub (`closeMergedPullRequest`: fusión en el `main`
+ * local, versión nueva y `code.fix_merged`). Si lo cierran sin fusionar, el PR queda cerrado.
  */
-import type { Approval, PlatformApi } from '../../platform/contracts.ts';
+import type { PlatformApi } from '../../platform/contracts.ts';
 import { describeGitHubError, linkFor, type RemotePull } from './github.ts';
 import { getState, saveState, type PullRequest } from './state.ts';
-import { mergePullRequest } from './tools.ts';
-
-const DECIDED_BY = 'GitHub';
-
-function pendingMergeApproval(platform: PlatformApi, prId: string): Approval | undefined {
-  return platform.approvals
-    .list({ status: 'pending' })
-    .find((approval) => approval.tool === 'bugs_merge_pr' && String((approval.input as { prId?: unknown })?.prId) === prId);
-}
+import { closeMergedPullRequest } from './tools.ts';
 
 function noteOnCase(platform: PlatformApi, pr: PullRequest, title: string, detail?: string): void {
   if (!platform.cases.get(pr.caseId)) return;
@@ -26,21 +17,11 @@ function noteOnCase(platform: PlatformApi, pr: PullRequest, title: string, detai
 }
 
 async function closeMerged(platform: PlatformApi, pr: PullRequest): Promise<void> {
-  const approval = pendingMergeApproval(platform, pr.id);
-  if (approval) {
-    try {
-      // Aprobar ejecuta bugs_merge_pr, que ve el PR ya fusionado y solo hace el cierre.
-      await platform.approvals.decide(approval.id, 'approved', DECIDED_BY, 'Fusionado directamente en GitHub.');
-      return;
-    } catch {
-      // Otra persona acaba de decidirla: el cierre de abajo es idempotente.
-    }
-  }
-  const result = await mergePullRequest(platform, pr.id);
+  const result = await closeMergedPullRequest(platform, pr.id);
   noteOnCase(
     platform,
     pr,
-    `${pr.id} (#${pr.github?.number}) fusionado directamente en GitHub`,
+    `${pr.id} (#${pr.github?.number}) fusionado a mano en GitHub`,
     result.ok ? result.content : `No se ha completado el cierre: ${result.content}`,
   );
 }
@@ -50,16 +31,6 @@ async function closeUnmerged(platform: PlatformApi, pr: PullRequest): Promise<vo
   if (!current || current.status !== 'open') return;
   const closed: PullRequest = { ...current, status: 'closed', closedAt: new Date().toISOString() };
   saveState(platform, { prs: getState(platform).prs.map((item) => (item.id === closed.id ? closed : item)) });
-
-  const approval = pendingMergeApproval(platform, pr.id);
-  if (approval) {
-    try {
-      await platform.approvals.decide(approval.id, 'rejected', DECIDED_BY, 'PR cerrado en GitHub sin fusionar.');
-      return;
-    } catch {
-      // Ya decidida por otra vía.
-    }
-  }
   noteOnCase(platform, pr, `${pr.id} (#${pr.github?.number}) cerrado en GitHub sin fusionar`);
 }
 

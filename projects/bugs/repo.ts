@@ -122,9 +122,8 @@ export class TerminalRepo {
   }
 
   /**
-   * Ejecuta git en el repositorio. El entorno va sin secretos salvo lo que se pase en `env` (la
-   * cabecera de autenticación de GitHub, que nunca va en los argumentos), y la salida se devuelve
-   * ya limpia de secretos.
+   * Ejecuta git en el repositorio (solo local: no tiene remoto). El entorno va sin secretos y la
+   * salida se devuelve ya limpia de secretos.
    */
   async git(
     args: string[],
@@ -214,13 +213,7 @@ export class TerminalRepo {
     return stdout.trim();
   }
 
-  /** Apunta `origin` a la URL indicada (sin credenciales: la autenticación va por entorno). */
-  async setRemote(url: string): Promise<void> {
-    const current = await this.git(['remote', 'get-url', 'origin'], { allowFailure: true });
-    if (current.code !== 0) await this.git(['remote', 'add', 'origin', url]);
-    else if (current.stdout.trim() !== url) await this.git(['remote', 'set-url', 'origin', url]);
-  }
-
+  /** Quita `origin` si quedó de una versión anterior de la demo: el repositorio es solo local. */
   async removeRemote(): Promise<void> {
     await this.git(['remote', 'remove', 'origin'], { allowFailure: true });
   }

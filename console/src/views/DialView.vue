@@ -58,7 +58,6 @@ const NOMBRE_ACCION: Record<string, string> = {
   bugs_run_tests: 'Ejecutar los tests',
   bugs_propose_fix: 'Proponer un arreglo',
   bugs_open_pr: 'Abrir un pull request',
-  bugs_merge_pr: 'Fusionar un pull request',
   facturas_get_invoice: 'Leer una factura',
   facturas_get_contract: 'Leer un contrato',
   facturas_record_finding: 'Registrar un hallazgo',
@@ -71,6 +70,10 @@ const NOMBRE_ACCION: Record<string, string> = {
   soporte_escalate_ticket: 'Escalar a una persona',
   soporte_flag_suspicious: 'Marcar como sospechoso',
   soporte_issue_credit: 'Emitir un abono',
+  plataforma_get_request: 'Leer la solicitud de agente',
+  plataforma_write_file: 'Escribir un fichero del agente',
+  plataforma_validate: 'Validar el agente',
+  plataforma_open_pr: 'Abrir el pull request del agente',
 };
 
 function nombreLegible(name: string, description: string): string {

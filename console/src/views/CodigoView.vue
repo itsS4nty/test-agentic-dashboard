@@ -4,6 +4,7 @@
  * y la versión desplegada; lista de pull requests y detalle del elegido: estado, rama, caso, enlace a
  * GitHub, descripción, tests antes → después y diff. Los tests que validan el arreglo son los que
  * ejecuta el agente antes de abrir el PR; la CI del repositorio solo sale si la hay (`ci` ≠ `none`).
+ * El agente no fusiona: el PR lo fusiona una persona a mano en GitHub y, al detectarlo, pasa a fusionado.
  */
 import { computed, ref } from 'vue';
 import Badge from '../ui/Badge.vue';
@@ -19,7 +20,7 @@ import DiffBlock from './project/DiffBlock.vue';
 import EmptyState from './project/EmptyState.vue';
 import LoadState from './project/LoadState.vue';
 import TestsCard from './project/TestsCard.vue';
-import { fmtDateTime, pendingApprovalsFor } from './project/format.ts';
+import { fmtDateTime } from './project/format.ts';
 import type { BugsSnapshot, CiStatus, PullRequest, TestRun } from './project/types.ts';
 import { useProjectSnapshot } from './project/useProjectSnapshot.ts';
 
@@ -31,16 +32,6 @@ const selectedId = ref<string | null>(null);
 const selected = computed<PullRequest | null>(
   () => prs.value.find((p) => p.id === selectedId.value) ?? prs.value[0] ?? null,
 );
-
-/** PRs cuya fusión está esperando a una persona. */
-const awaitingMerge = computed(
-  () =>
-    new Map(
-      pendingApprovalsFor('bugs_merge_pr', () => true).map((a) => [String((a.input as { prId?: unknown }).prId), a]),
-    ),
-);
-
-const selectedApproval = computed(() => (selected.value ? awaitingMerge.value.get(selected.value.id) : undefined));
 
 const lastMerged = computed(() =>
   prs.value
@@ -65,7 +56,7 @@ const version = computed<{ variant: BadgeVariant; note: string; title: string }>
 function prState(pr: PullRequest): { status: Status; label: string } {
   if (pr.status === 'merged') return { status: 'success', label: 'Fusionado' };
   if (pr.status === 'closed') return { status: 'neutral', label: 'Cerrado' };
-  if (awaitingMerge.value.has(pr.id)) return { status: 'warning', label: 'Pendiente de aprobación' };
+  if (pr.github) return { status: 'warning', label: 'Pendiente de fusión en GitHub' };
   return { status: 'neutral', label: 'Abierto' };
 }
 
@@ -103,7 +94,6 @@ const detailItems = computed<KeyValueItem[]>(() => {
   if (pr.github) items.push({ label: 'GitHub', slot: 'github' });
   // Sin CI en el repositorio no hay fila: los tests que cuentan son los del agente, más abajo.
   if (ciState(pr)) items.push({ label: 'CI', slot: 'ci' });
-  if (selectedApproval.value) items.push({ label: 'Aprobación', value: selectedApproval.value.id, mono: true });
   return items;
 });
 
@@ -153,7 +143,7 @@ const description = computed<Block[]>(() => {
   <section class="codigo">
     <PageHeader
       title="terminal-pagos"
-      description="Software de cobro de los datáfonos. Fusionar un arreglo pide permiso a una persona."
+      description="Software de cobro de los datáfonos. El agente abre el PR; una persona lo revisa y lo fusiona a mano en GitHub."
     >
       <template v-if="data" #actions>
         <a
@@ -262,13 +252,29 @@ const description = computed<Block[]>(() => {
             </KeyValue>
           </div>
 
-          <div v-if="selectedApproval" class="callout" role="status">
-            <StatusDot status="warning" label="La fusión espera a una persona." />
-            <Button as="a" href="#aprobaciones" variant="primary" size="sm">Ir a Aprobaciones</Button>
+          <div v-if="selected.status === 'open' && selected.github" class="callout" role="status">
+            <StatusDot status="warning">
+              Pendiente de fusión manual.
+              <span class="callout__muted">Una persona lo revisa y lo fusiona en GitHub; la consola lo detecta sola.</span>
+            </StatusDot>
+            <Button
+              as="a"
+              :href="selected.github.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="primary"
+              size="sm"
+            >Abrir en GitHub</Button>
+          </div>
+          <div v-else-if="selected.status === 'open'" class="callout" role="status">
+            <StatusDot status="neutral">
+              Abierto.
+              <span class="callout__muted">Lo fusiona una persona a mano en GitHub; sin GitHub conectado, queda abierto aquí.</span>
+            </StatusDot>
           </div>
           <div v-else-if="selected.status === 'merged'" class="callout" role="status">
             <StatusDot status="success">
-              Fusionado en {{ selected.github ? 'GitHub' : 'main' }}.
+              Fusionado {{ selected.github ? 'a mano en GitHub' : 'en main' }}.
               <span class="callout__muted">La versión v{{ data.version }} se despliega en los datáfonos.</span>
             </StatusDot>
           </div>

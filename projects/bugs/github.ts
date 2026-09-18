@@ -1,32 +1,46 @@
 /**
- * Conexión opcional con un repositorio de GitHub dedicado a la demo.
+ * Conexión opcional con GitHub: el repositorio de la plataforma (monorepo), donde el producto que
+ * mantiene el agente de código vive en la carpeta `terminal-pagos/`.
  *
- * Se activa con GITHUB_TOKEN y GITHUB_REPO (y DEMO_GITHUB distinto de `off`). Sin eso, o si algo
- * falla al conectar, el proyecto trabaja en local exactamente igual que siempre.
+ * Se activa con GITHUB_TOKEN (y DEMO_GITHUB distinto de `off`). El repositorio es GITHUB_REPO o, si no
+ * está, el `origin` en GitHub del propio repositorio de la plataforma. Sin eso, o si algo falla al
+ * conectar, el proyecto trabaja en local exactamente igual que siempre.
  *
- * Seguridad:
- * - El token solo se lee de `process.env` y solo lo usan Octokit y git. Nunca va en argumentos,
- *   URLs, `.git/config`, trazas, notificaciones, snapshots ni resultados que ve el modelo.
- * - git recibe la cabecera de autenticación por variables de entorno (GIT_CONFIG_*), sin ayudantes
- *   de credenciales ni configuración global que pudiera cambiar la URL o usar otras credenciales.
- * - Guarda destructiva: solo se reescribe el remoto (force-push, cierre de PRs, borrado de ramas)
- *   si está vacío o si su rama base tiene el fichero marcador `.agentes-demo`. Se comprueba antes de
- *   cada una de esas operaciones.
+ * El repositorio local `<dataDir>/repos/terminal-pagos` es SOLO local (sin remoto). Para abrir un PR
+ * se usa únicamente la API de GitHub: se crea un commit con los ficheros cambiados de la rama de
+ * arreglo, colocados bajo `terminal-pagos/`, encima de la punta de la rama base; se crea (o se
+ * actualiza) la rama `fix/…` y se abre el PR. Nada más escribe en GitHub:
+ * - nunca se toca la rama base ni ninguna rama que no empiece por `fix/`, ni una `fix/…` que no haya
+ *   creado la demo;
+ * - nunca se fusiona: el PR lo revisa y lo fusiona una persona a mano en GitHub. El sondeo lo detecta
+ *   y hace el cierre en local (versión nueva, `code.fix_merged`);
+ * - «Reiniciar demo» no toca GitHub.
+ *
+ * Seguridad: el token solo se lee de `process.env` y solo lo usa Octokit. Nunca va en argumentos,
+ * URLs, trazas, notificaciones, snapshots ni resultados que ve el modelo.
  */
-import { Buffer } from 'node:buffer';
+import { execFile } from 'node:child_process';
 import { Octokit } from '@octokit/rest';
 import type { PlatformApi } from '../../platform/contracts.ts';
-import { redact, registerSecret } from './redact.ts';
-import type { TerminalRepo } from './repo.ts';
-import { PROJECT_ID, type CiStatus, type GitHubPullRequest } from './state.ts';
+import { childEnv, redact, registerSecret } from './redact.ts';
+import { COMPONENT, PROJECT_ID, type CiStatus, type GitHubPullRequest } from './state.ts';
 
-/** Fichero que marca un repositorio como de la demo. Está en la plantilla. */
-export const MARKER_FILE = '.agentes-demo';
 /** Marca en el cuerpo de los PRs que abre la demo (evita depender de etiquetas). */
 export const PR_MARKER = '<!-- agentes-demo -->';
 
+/**
+ * Marca en el mensaje de los commits que crea la demo en GitHub. Una rama `fix/…` que ya existe solo
+ * se reescribe si su último commit la lleva: nunca se pisa el trabajo de una persona.
+ */
+export const COMMIT_TRAILER = 'Agentes-Demo: terminal-pagos';
+
+/** Carpeta del producto dentro del repositorio de la plataforma. */
+export const REMOTE_DIR = COMPONENT;
+
+/** Única forma de rama que la demo crea o actualiza en GitHub. */
+export const FIX_BRANCH_PREFIX = 'fix/';
+
 const API_TIMEOUT_MS = 15_000;
-const GIT_REMOTE_TIMEOUT_MS = 90_000;
 export const POLL_INTERVAL_MS = 10_000;
 
 export type GitHubMode = 'local' | 'github';
@@ -38,7 +52,6 @@ export interface GitHubSettings {
   repo: string;
   baseBranch: string;
   apiUrl: string;
-  gitUrl: string;
   htmlUrl: string;
 }
 
@@ -50,47 +63,20 @@ export interface RemotePull {
   headSha: string;
 }
 
-/** Error de la guarda destructiva: el remoto no es un repositorio de la demo. */
+/** Operación que la demo se niega a hacer en GitHub (por ejemplo, escribir fuera de `fix/…`). */
 export class GuardError extends Error {}
 
-/** Resultado de la guarda: el remoto tal y como estaba al comprobarlo. */
-export interface DemoRepoCheck {
-  empty: boolean;
-  /** Referencias del remoto al comprobarlo: `refs/heads/main` → sha. */
-  refs: Map<string, string>;
-}
-
-/**
- * `--force-with-lease` para una referencia: git solo la reescribe o la borra si sigue en el commit que
- * vio la guarda (o, si no existía, si sigue sin existir). Nunca se combina con `--force`, que lo anula.
- */
-function lease(ref: string, check: DemoRepoCheck): string {
-  return `--force-with-lease=${ref}:${check.refs.get(ref) ?? ''}`;
+/** Fichero de la rama de arreglo para el commit en GitHub. `content: null` = borrado. */
+export interface BranchFile {
+  /** Ruta relativa a la raíz de terminal-pagos. */
+  path: string;
+  content: string | null;
+  mode?: '100644' | '100755';
 }
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 const silentLog = { debug() {}, info() {}, warn() {}, error() {} };
-
-/**
- * Cabecera de autenticación para git en variables de entorno, con ámbito en el origen de la URL
- * (`http.https://github.com/.extraheader`). Con remotos que no son https no hace falta.
- */
-export function gitAuthEnv(gitUrl: string, token: string): NodeJS.ProcessEnv {
-  let url: URL;
-  try {
-    url = new URL(gitUrl);
-  } catch {
-    return {};
-  }
-  if (url.protocol !== 'https:') return {};
-  const basic = Buffer.from(`x-access-token:${token}`).toString('base64');
-  return {
-    GIT_CONFIG_COUNT: '1',
-    GIT_CONFIG_KEY_0: `http.${url.origin}/.extraheader`,
-    GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${basic}`,
-  };
-}
 
 /** Estado HTTP de un error de Octokit, si lo tiene. */
 function statusOf(error: unknown): number | undefined {
@@ -137,6 +123,25 @@ function requestOptions() {
   return { request: { signal: AbortSignal.timeout(API_TIMEOUT_MS) } };
 }
 
+/**
+ * `owner/nombre` del `origin` del repositorio de la plataforma si apunta a github.com. Sin GITHUB_REPO
+ * se usa este: todo vive en el mismo repositorio (el producto, en `terminal-pagos/`). Solo lee la
+ * configuración local de git (sin red) y nunca muestra la URL, que podría llevar credenciales.
+ */
+function platformOriginRepo(rootDir: string): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    execFile(
+      'git',
+      ['remote', 'get-url', 'origin'],
+      { cwd: rootDir, env: childEnv({ GIT_TERMINAL_PROMPT: '0' }), timeout: 5_000, encoding: 'utf8' },
+      (error, stdout) => {
+        const match = error ? null : /github\.com[/:]([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/.exec(String(stdout).trim());
+        resolve(match ? `${match[1]}/${match[2]}` : undefined);
+      },
+    );
+  });
+}
+
 export class GitHubLink {
   mode: GitHubMode = 'local';
   /** Aviso visible en la consola cuando se ha configurado GitHub pero no se puede usar. */
@@ -172,9 +177,11 @@ export class GitHubLink {
     this.#octokit = undefined;
 
     const token = process.env.GITHUB_TOKEN?.trim();
-    const repoName = process.env.GITHUB_REPO?.trim();
     const switchedOff = process.env.DEMO_GITHUB?.trim().toLowerCase() === 'off';
-    if (!token || !repoName || switchedOff) return null;
+    if (!token || switchedOff) return null;
+    // Sin GITHUB_REPO, el repositorio de la plataforma (su `origin` en GitHub).
+    const repoName = process.env.GITHUB_REPO?.trim() || (await platformOriginRepo(this.platform.rootDir));
+    if (!repoName) return null;
 
     registerSecret(token);
     this.configured = true;
@@ -210,24 +217,6 @@ export class GitHubLink {
       this.warning = 'GITHUB_API_URL debe ser https:// (http:// solo hacia 127.0.0.1 o localhost, para pruebas). El proyecto Código trabaja en local.';
       return null;
     }
-    const gitUrl = process.env.GITHUB_GIT_URL?.trim() || `https://github.com/${owner}/${name}.git`;
-    let parsedGit: URL;
-    try {
-      parsedGit = new URL(gitUrl);
-    } catch {
-      this.warning = 'GITHUB_GIT_URL no es una URL válida. El proyecto Código trabaja en local.';
-      return null;
-    }
-    if (parsedGit.username || parsedGit.password) {
-      // No se repite la URL: podría llevar credenciales.
-      this.warning = 'GITHUB_GIT_URL no puede llevar credenciales: el token va solo en GITHUB_TOKEN. El proyecto Código trabaja en local.';
-      return null;
-    }
-    if (parsedGit.protocol !== 'https:' && parsedGit.protocol !== 'file:') {
-      this.warning = 'GITHUB_GIT_URL debe ser https:// (o file:// para pruebas). El proyecto Código trabaja en local.';
-      return null;
-    }
-
     const octokit = new Octokit({ auth: token, baseUrl: apiUrl, userAgent: 'agentes-demo', log: silentLog });
     let htmlUrl = `https://github.com/${owner}/${name}`;
     try {
@@ -248,7 +237,7 @@ export class GitHubLink {
 
     this.#token = token;
     this.#octokit = octokit;
-    this.settings = { owner, name, repo, baseBranch, apiUrl, gitUrl, htmlUrl };
+    this.settings = { owner, name, repo, baseBranch, apiUrl, htmlUrl };
     return this.settings;
   }
 
@@ -282,182 +271,92 @@ export class GitHubLink {
     return { octokit: this.#octokit, settings: this.settings };
   }
 
-  // ── git contra el remoto ───────────────────────────────────
+  // ── Rama de arreglo por la API ─────────────────────────────
 
   /**
-   * git con autenticación por entorno. Sin configuración global ni del sistema (podría reescribir
-   * la URL o aportar otras credenciales) y sin ayudantes de credenciales.
+   * Publica la rama de arreglo en GitHub solo con la API: un commit cuyo padre es la punta actual de
+   * la rama base, con los ficheros indicados bajo `terminal-pagos/`, y la referencia
+   * `refs/heads/<branch>` apuntando a él (se crea, o se reescribe si ya existía). Solo acepta ramas
+   * `fix/…` distintas de la base: nunca toca la rama base ni otras ramas. Devuelve el sha del commit.
    */
-  private remoteGit(repo: TerminalRepo, args: string[], options: { allowFailure?: boolean } = {}) {
-    const { settings } = this.api();
-    const env: NodeJS.ProcessEnv = {
-      GIT_CONFIG_NOSYSTEM: '1',
-      GIT_CONFIG_GLOBAL: process.platform === 'win32' ? 'NUL' : '/dev/null',
-      GIT_TRACE_REDACT: '1',
-      // Sin trazas heredadas del entorno: volcarían cabeceras a stderr o a un fichero.
-      GIT_TRACE: undefined,
-      GIT_TRACE_CURL: undefined,
-      GIT_TRACE_PACKET: undefined,
-      GIT_CURL_VERBOSE: undefined,
-      GIT_ASKPASS: '',
-      SSH_ASKPASS: '',
-      ...gitAuthEnv(settings.gitUrl, this.#token ?? ''),
-    };
-    return repo.git(['-c', 'credential.helper=', '-c', 'core.askPass=', ...args], {
-      ...options,
-      env,
-      timeout: GIT_REMOTE_TIMEOUT_MS,
-    });
-  }
-
-  async useRemote(repo: TerminalRepo): Promise<void> {
-    await repo.setRemote(this.api().settings.gitUrl);
-  }
-
-  /** Referencias del remoto: `refs/heads/main` → sha. */
-  async remoteRefs(repo: TerminalRepo): Promise<Map<string, string>> {
-    const { stdout } = await this.remoteGit(repo, ['ls-remote', 'origin']);
-    const refs = new Map<string, string>();
-    for (const line of stdout.split('\n')) {
-      const [sha, ref] = line.trim().split(/\s+/);
-      if (sha && ref) refs.set(ref, sha);
-    }
-    return refs;
-  }
-
-  /**
-   * Guarda destructiva: el remoto está vacío o su rama base tiene el marcador en la raíz. Lanza
-   * `GuardError` si no. Se llama antes de cada operación que reescribe o borra algo en GitHub, y esa
-   * operación usa `lease()` con las referencias devueltas para no tocar nada que haya cambiado después.
-   */
-  async assertDemoRepo(repo: TerminalRepo): Promise<DemoRepoCheck> {
+  async publishFixBranch(input: { branch: string; files: BranchFile[]; message: string }): Promise<string> {
     const { octokit, settings } = this.api();
-    const refs = await this.remoteRefs(repo);
-    if (refs.size === 0) return { empty: true, refs };
-    const refused = new GuardError(
-      `El repositorio ${settings.repo} no está vacío y su rama ${settings.baseBranch} no tiene el fichero ${MARKER_FILE}. ` +
-        'Para no tocar un repositorio ajeno, el proyecto Código trabaja en local. ' +
-        'Usa un repositorio vacío dedicado a la demo (sin README, .gitignore ni licencia).',
-    );
-    const baseSha = refs.get(`refs/heads/${settings.baseBranch}`);
-    if (!baseSha) throw refused;
+    const common = { owner: settings.owner, repo: settings.name };
+    const { branch } = input;
+    if (
+      !branch.startsWith(FIX_BRANCH_PREFIX) ||
+      branch === settings.baseBranch ||
+      branch.length <= FIX_BRANCH_PREFIX.length ||
+      branch.includes('..') ||
+      !/^[A-Za-z0-9._/-]+$/.test(branch)
+    ) {
+      throw new GuardError(`La demo solo escribe en GitHub ramas ${FIX_BRANCH_PREFIX}…; "${branch}" no se sube.`);
+    }
+    if (!input.files.length) throw new Error(`La rama ${branch} no tiene cambios que subir.`);
+
+    const { data: baseRef } = await octokit.git.getRef({ ...common, ref: `heads/${settings.baseBranch}`, ...requestOptions() });
+    const baseSha = baseRef.object.sha;
+    const { data: baseCommit } = await octokit.git.getCommit({ ...common, commit_sha: baseSha, ...requestOptions() });
+    // El producto tiene que estar ya en la rama base: si no, el PR crearía una carpeta a medias.
     try {
-      // El marcador se busca en el commit exacto que ve git, no en la rama por nombre: si el remoto de
-      // git (GITHUB_GIT_URL) y el repositorio de la API no son el mismo, ese commit no existe en la API
-      // y la guarda no pasa.
-      const { data } = await octokit.repos.getContent({
-        owner: settings.owner,
-        repo: settings.name,
-        path: MARKER_FILE,
-        ref: baseSha,
-        ...requestOptions(),
-      });
-      if (Array.isArray(data) || data.type !== 'file') throw refused;
+      await octokit.repos.getContent({ ...common, path: `${REMOTE_DIR}/package.json`, ref: baseSha, ...requestOptions() });
     } catch (error) {
-      const status = statusOf(error);
-      if (error instanceof GuardError || status === 404 || status === 422) throw refused;
-      throw error;
-    }
-    return { empty: false, refs };
-  }
-
-  /** Trae la rama base a `refs/remotes/origin/<base>`. No cambia nada local salvo esa referencia. */
-  async fetchBase(repo: TerminalRepo): Promise<void> {
-    const { settings } = this.api();
-    const base = settings.baseBranch;
-    await this.remoteGit(repo, ['fetch', '--no-tags', '--prune', 'origin', `+refs/heads/${base}:refs/remotes/origin/${base}`]);
-  }
-
-  /** Deja `main` local igual que la rama base del remoto. */
-  async syncMain(repo: TerminalRepo): Promise<void> {
-    const base = this.api().settings.baseBranch;
-    await this.fetchBase(repo);
-    await repo.git(['checkout', '-q', '-f', 'main']);
-    await repo.git(['reset', '-q', '--hard', `refs/remotes/origin/${base}`]);
-  }
-
-  /** Sube `main` local a la rama base sin forzar (solo avance rápido). */
-  async pushMain(repo: TerminalRepo): Promise<void> {
-    const base = this.api().settings.baseBranch;
-    await this.remoteGit(repo, ['push', '--porcelain', 'origin', `refs/heads/main:refs/heads/${base}`]);
-  }
-
-  /**
-   * Sube una rama de arreglo. Si en GitHub ya hay una rama con ese nombre y otro contenido (restos
-   * de una ejecución anterior), solo la sobrescribe si el repositorio pasa la guarda.
-   */
-  async pushBranch(repo: TerminalRepo, branch: string): Promise<void> {
-    const { settings } = this.api();
-    if (branch === settings.baseBranch) {
-      throw new Error(`La rama ${branch} es la rama base de ${settings.repo}: el arreglo tiene que ir en una rama propia.`);
-    }
-    const ref = `refs/heads/${branch}`;
-    const refspec = `${ref}:${ref}`;
-    const push = await this.remoteGit(repo, ['push', '--porcelain', 'origin', refspec], { allowFailure: true });
-    if (push.code === 0) return;
-    const output = `${push.stdout}\n${push.stderr}`;
-    if (!/rejected|non-fast-forward|fetch first|stale info/i.test(output)) {
-      throw new Error(`git push: ${output.trim()}`);
-    }
-    const check = await this.assertDemoRepo(repo);
-    await this.remoteGit(repo, ['push', '--porcelain', lease(ref, check), 'origin', refspec]);
-  }
-
-  /**
-   * Devuelve el remoto al punto de partida: PRs de la demo cerrados, sus ramas borradas y la rama base
-   * con el contenido de la plantilla (el `main` local recién creado). Cada paso pasa la guarda justo
-   * antes, y los de git reescriben o borran solo si la referencia sigue donde la vio la guarda. La rama
-   * base se reescribe al final para que todas las comprobaciones miren el mismo commit con marcador.
-   */
-  async resetRemote(repo: TerminalRepo): Promise<void> {
-    const { octokit, settings } = this.api();
-    const base = settings.baseBranch;
-    const baseRef = `refs/heads/${base}`;
-
-    const initial = await this.assertDemoRepo(repo);
-    if (!initial.empty) {
-      const { data: pulls } = await octokit.pulls.list({
-        owner: settings.owner,
-        repo: settings.name,
-        state: 'all',
-        per_page: 100,
-        ...requestOptions(),
-      });
-      const demoPulls = pulls.filter((pull) => (pull.body ?? '').includes(PR_MARKER));
-
-      for (const pull of demoPulls.filter((p) => p.state === 'open')) {
-        await this.assertDemoRepo(repo);
-        await octokit.pulls.update({
-          owner: settings.owner,
-          repo: settings.name,
-          pull_number: pull.number,
-          state: 'closed',
-          ...requestOptions(),
-        });
-      }
-
-      const branches = new Set(
-        demoPulls
-          .filter((pull) => pull.head?.repo?.full_name?.toLowerCase() === settings.repo.toLowerCase())
-          .map((pull) => pull.head.ref)
-          .filter((ref) => ref && ref !== base),
+      if (statusOf(error) !== 404) throw error;
+      throw new GuardError(
+        `La rama ${settings.baseBranch} de ${settings.repo} no tiene la carpeta ${REMOTE_DIR}/: súbela a GitHub antes de abrir PRs.`,
       );
-      for (const branch of branches) {
-        const ref = `refs/heads/${branch}`;
-        const check = await this.assertDemoRepo(repo);
-        if (!check.refs.has(ref)) continue;
-        await this.remoteGit(repo, ['push', '--porcelain', lease(ref, check), 'origin', '--delete', ref]);
-      }
     }
 
-    const check = await this.assertDemoRepo(repo);
-    await this.remoteGit(repo, ['push', '--porcelain', lease(baseRef, check), 'origin', `refs/heads/main:${baseRef}`]);
-    await this.fetchBase(repo);
+    const tree = input.files.map((file) => {
+      const path = `${REMOTE_DIR}/${file.path.replace(/^\/+/, '')}`;
+      const mode = file.mode ?? '100644';
+      return file.content === null
+        ? { path, mode, type: 'blob' as const, sha: null }
+        : { path, mode, type: 'blob' as const, content: file.content };
+    });
+    const { data: newTree } = await octokit.git.createTree({
+      ...common,
+      base_tree: baseCommit.tree.sha,
+      tree,
+      ...requestOptions(),
+    });
+    if (newTree.sha === baseCommit.tree.sha) {
+      throw new Error(
+        `La carpeta ${REMOTE_DIR}/ de ${settings.baseBranch} en GitHub ya contiene exactamente estos cambios: no hay nada que proponer.`,
+      );
+    }
+    const { data: commit } = await octokit.git.createCommit({
+      ...common,
+      message: `${input.message.trim()}\n\n${COMMIT_TRAILER}`,
+      tree: newTree.sha,
+      parents: [baseSha],
+      ...requestOptions(),
+    });
+
+    try {
+      await octokit.git.createRef({ ...common, ref: `refs/heads/${branch}`, sha: commit.sha, ...requestOptions() });
+    } catch (error) {
+      if (statusOf(error) !== 422 || !/already exists/i.test(apiMessage(error))) throw error;
+      // Restos de una ejecución anterior con el mismo nombre: la rama fix/… se reescribe, pero solo si
+      // la dejó la demo (su último commit lleva la marca). Una rama de una persona no se toca.
+      const { data: current } = await octokit.git.getRef({ ...common, ref: `heads/${branch}`, ...requestOptions() });
+      const { data: head } = await octokit.git.getCommit({ ...common, commit_sha: current.object.sha, ...requestOptions() });
+      if (!head.message?.includes(COMMIT_TRAILER)) {
+        throw new GuardError(
+          `La rama ${branch} ya existe en ${settings.repo} y no la ha creado la demo: no se reescribe. Usa otro nombre de rama fix/….`,
+        );
+      }
+      await octokit.git.updateRef({ ...common, ref: `heads/${branch}`, sha: commit.sha, force: true, ...requestOptions() });
+    }
+    return commit.sha;
   }
 
   // ── Pull requests ──────────────────────────────────────────
 
-  /** Crea el PR, o actualiza título y cuerpo si ya había uno abierto para la rama. */
+  /**
+   * Crea el PR, o actualiza título y cuerpo si ya había uno abierto de la demo para la rama. Un PR
+   * abierto por una persona para esa rama se reutiliza tal cual, sin editarlo. Nunca fusiona ni cierra.
+   */
   async openPull(input: { number?: number; branch: string; title: string; body: string }): Promise<GitHubPullRequest> {
     const { octokit, settings } = this.api();
     const common = { owner: settings.owner, repo: settings.name };
@@ -465,7 +364,7 @@ export class GitHubLink {
     let number = input.number;
     if (number) {
       const { data } = await octokit.pulls.get({ ...common, pull_number: number, ...requestOptions() });
-      if (data.state !== 'open') number = undefined;
+      if (data.state !== 'open' || data.head?.ref !== input.branch || !data.body?.includes(PR_MARKER)) number = undefined;
     }
     if (!number) {
       const { data: existing } = await octokit.pulls.list({
@@ -475,7 +374,9 @@ export class GitHubLink {
         per_page: 10,
         ...requestOptions(),
       });
-      number = existing.find((pull) => pull.head?.ref === input.branch)?.number;
+      const found = existing.find((pull) => pull.head?.ref === input.branch);
+      if (found && !found.body?.includes(PR_MARKER)) return { number: found.number, url: found.html_url, ci: 'none' };
+      number = found?.number;
     }
 
     if (number) {
@@ -488,7 +389,7 @@ export class GitHubLink {
       });
       return { number: data.number, url: data.html_url, ci: 'none' };
     }
-    // Justo después del push, GitHub a veces aún no reconoce la rama (422): se reintenta un par de veces.
+    // Justo después de crear la rama, GitHub a veces aún no la reconoce (422): se reintenta un par de veces.
     for (let attempt = 0; ; attempt++) {
       try {
         const { data } = await octokit.pulls.create({
@@ -523,21 +424,6 @@ export class GitHubLink {
       merged: Boolean(data.merged),
       headSha: data.head.sha,
     };
-  }
-
-  /** Fusiona con un commit de merge. Con `sha`, solo si la rama sigue en el commit revisado. */
-  async mergePull(number: number, input: { sha?: string; title: string }): Promise<string | undefined> {
-    const { octokit, settings } = this.api();
-    const { data } = await octokit.pulls.merge({
-      owner: settings.owner,
-      repo: settings.name,
-      pull_number: number,
-      merge_method: 'merge',
-      commit_title: input.title,
-      ...(input.sha ? { sha: input.sha } : {}),
-      ...requestOptions(),
-    });
-    return data.sha;
   }
 
   /**

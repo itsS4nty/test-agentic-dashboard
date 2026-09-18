@@ -4,7 +4,8 @@
  *   npx tsx projects/bugs/check.ts
  *
  * Registra solo `bugs`, lanza `bugs-analizar`, espera a que el agente termine y comprueba
- * el PR con tests en verde y la fusión pendiente; la aprueba y comprueba la versión 2.14.3.
+ * el PR con tests en verde y que el agente no fusiona; simula la fusión manual en GitHub con el
+ * cierre del sondeo y comprueba la versión 2.14.3.
  * Usa un directorio de datos propio que borra al terminar.
  */
 import { execFileSync } from 'node:child_process';
@@ -16,6 +17,7 @@ import type { DomainEvent } from '../../platform/contracts.ts';
 import { createPlatform } from '../../platform/index.ts';
 import { bugs } from './index.ts';
 import type { BugsState } from './state.ts';
+import { closeMergedPullRequest } from './tools.ts';
 
 // Siempre en modo local: un .env con GITHUB_TOKEN no debe hacer que esta comprobación llame a GitHub.
 process.env.DEMO_GITHUB = 'off';
@@ -59,7 +61,7 @@ try {
 
   const record = platform.cases.get(caseId!);
   const pr = snapshot().prs[0];
-  check(record?.status === 'waiting_approval', 'caso en waiting_approval', record?.status);
+  check(record?.status === 'resolved' && record.resolvedBy === 'agent', 'el agente termina al abrir el PR', record?.status);
   check(pr?.status === 'open', 'PR abierto', pr?.status);
   check(pr?.testsBefore.failed === 1 && pr.testsBefore.passed === 5, 'tests antes: 5 pasan, 1 falla', pr?.testsBefore);
   check(pr?.testsAfter.failed === 0 && pr.testsAfter.passed === 6, 'tests después: 6 pasan, 0 fallan', pr?.testsAfter);
@@ -68,12 +70,11 @@ try {
   check(snapshot().branches.includes(pr?.branch ?? '-'), 'la rama del PR aparece en el snapshot', snapshot().branches);
 
   const pending = platform.approvals.list({ caseId: caseId!, status: 'pending' });
-  check(pending.length === 1 && pending[0].tool === 'bugs_merge_pr', 'aprobación pendiente de bugs_merge_pr', pending.map((a) => a.tool));
-  console.log(`  Aprobación: ${pending[0]?.summary}`);
+  check(pending.length === 0, 'sin aprobaciones: el agente no fusiona', pending.map((a) => a.tool));
 
-  console.log('\n3. Aprobar la fusión');
-  const decided = await platform.approvals.decide(pending[0].id, 'approved', 'check');
-  check(decided.status === 'executed', 'aprobación ejecutada', decided.result);
+  console.log('\n3. Fusión manual en GitHub (simulada con el cierre del sondeo)');
+  const closed = await closeMergedPullRequest(platform, pr!.id);
+  check(closed.ok, 'cierre tras la fusión manual', closed.content);
   const merged = snapshot().prs[0];
   check(merged.status === 'merged' && merged.mergedAt, 'PR fusionado');
   check(snapshot().version === '2.14.3', 'versión 2.14.3 en el snapshot', snapshot().version);
@@ -84,7 +85,6 @@ try {
   check(log.includes('release: terminal-pagos 2.14.3') && log.includes(`Fusiona ${merged.id}`), 'commits de fusión y versión en main', log);
   const fixMerged = domainEvents.find((e) => e.name === 'code.fix_merged');
   check(fixMerged?.payload?.newVersion === '2.14.3' && fixMerged.payload.prId === merged.id, 'emitido code.fix_merged con 2.14.3', fixMerged?.payload);
-  check(platform.cases.get(caseId!)?.status === 'resolved', 'caso resuelto tras aprobar', platform.cases.get(caseId!)?.status);
   const mainTests = await platform.tools.invoke('bugs_run_tests', {}, { caseId: caseId!, actor: 'human', skipPolicy: true });
   const mainData = mainTests.result.data as { passed: number; failed: number };
   check(mainData.failed === 0 && mainData.passed === 6, 'tests en main tras fusionar: 6 pasan', mainData);

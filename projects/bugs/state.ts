@@ -43,7 +43,7 @@ export interface PullRequest {
   diff: string;
   testsBefore: TestSummary;
   testsAfter: TestSummary;
-  /** Commit de la rama que se revisó al abrir el PR; en GitHub solo se fusiona ese. */
+  /** Commit de la rama local que se revisó al abrir el PR. */
   headSha?: string;
   github?: GitHubPullRequest;
 }
@@ -53,8 +53,8 @@ export interface BugsState {
   branches: string[];
   prs: PullRequest[];
   /**
-   * Repositorio de GitHub (`owner/nombre`) con el que se inicializó el repositorio local. Sin valor,
-   * el repositorio local salió de la plantilla sin remoto (modo local).
+   * Repositorio de GitHub y carpeta del producto (`owner/nombre/terminal-pagos`) en los que se abren
+   * los PRs de este estado. Sin valor, modo local. El repositorio local nunca tiene remoto.
    */
   boundRepo?: string;
   /**

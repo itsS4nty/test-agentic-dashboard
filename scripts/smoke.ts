@@ -4,7 +4,7 @@
  *
  * Plataforma en memoria, modo rápido y proveedor simulado, con TODOS los proyectos registrados.
  * Recorre cada escenario de docs/CONTRACTS.md § 6 y los flujos que cruzan proyectos
- * (ola → sospecha de bug → PR → aprobación → versión 2.14.3 en los dispositivos), el modo sombra del dial,
+ * (ola → sospecha de bug → PR → fusión manual simulada → versión 2.14.3 en los dispositivos), el modo sombra del dial,
  * la prueba de fuego de soporte y la coherencia de las métricas. Imprime una tabla PASS/FAIL y
  * sale con código 1 si algo falla.
  *
@@ -21,6 +21,7 @@ import type { Case, PlatformApi, PlatformEvent, TimelineEntry } from '../platfor
 import { createPlatform } from '../platform/index.ts';
 import { allProjects } from '../projects/index.ts';
 import type { BugsState } from '../projects/bugs/state.ts';
+import { closeMergedPullRequest } from '../projects/bugs/tools.ts';
 import type { FacturasSnapshot } from '../projects/facturas/types.ts';
 import { simulator, type DispositivoSnapshot } from '../projects/dispositivo/simulator.ts';
 import type { Ticket } from '../projects/soporte/state.ts';
@@ -253,26 +254,30 @@ const blocks: Block[] = [
       const codeCases = platform.cases.list({ project: 'bugs' });
       const codeCase = codeCases[0];
       check('caso de código enlazado al caso de ola', codeCases.length === 1 && codeCase.data.sourceCaseId === wave?.id, codeCases.map((c) => c.data.sourceCaseId));
-      check('el agente bugs deja el caso en waiting_approval', codeCase?.status === 'waiting_approval', codeCase?.status);
+      check('el agente bugs termina al abrir el PR', codeCase?.status === 'resolved' && codeCase.resolvedBy === 'agent', `${codeCase?.status}:${codeCase?.resolvedBy}`);
 
       const pr = bugsSnap(platform).prs[0];
       check('PR abierto', pr?.status === 'open', pr?.status);
       check('tests antes: fallan en main', (pr?.testsBefore.failed ?? 0) > 0, pr?.testsBefore && { passed: pr.testsBefore.passed, failed: pr.testsBefore.failed });
       check('tests después: en verde en la rama', pr?.testsAfter.failed === 0 && pr.testsAfter.passed > 0, pr?.testsAfter && { passed: pr.testsAfter.passed, failed: pr.testsAfter.failed });
 
-      const merge = platform.approvals.list({ caseId: codeCase?.id, status: 'pending' });
-      check('aprobación pendiente de bugs_merge_pr', merge.length === 1 && merge[0].tool === 'bugs_merge_pr', merge.map((a) => a.tool));
-      check('los datáfonos siguen en 2.14.2 antes de aprobar', simulator.devices().filter((d) => d.type === 'datafono').every((d) => d.softwareVersion === '2.14.2'));
-      if (!merge[0]) return;
+      const approvals = platform.approvals.list({ caseId: codeCase?.id });
+      const mergeCalls = entries(codeCase, (e) => /merge/.test(e.tool ?? ''));
+      check('el agente no fusiona: sin aprobación ni intento de fusión', approvals.length === 0 && mergeCalls.length === 0, approvals.map((a) => a.tool));
+      check('los datáfonos siguen en 2.14.2 con el PR abierto', simulator.devices().filter((d) => d.type === 'datafono').every((d) => d.softwareVersion === '2.14.2'));
+      if (!pr) return;
 
-      const decided = await platform.approvals.decide(merge[0].id, 'approved', 'Smoke');
+      // Una persona fusiona el PR a mano en GitHub: el sondeo haría exactamente este cierre.
+      const closed = await closeMergedPullRequest(platform, pr.id);
       await settle(platform);
-      check('fusión ejecutada', decided.status === 'executed', short(decided.result?.content));
+      check('cierre tras la fusión manual', closed.ok, short(closed.content));
       check('PR fusionado y versión 2.14.3 en código', bugsSnap(platform).prs[0]?.status === 'merged' && bugsSnap(platform).version === '2.14.3', bugsSnap(platform).version);
       check('code.fix_merged emitido', events.some((e) => e.type === 'domain' && e.event.name === 'code.fix_merged'));
       const datafonos = dispositivoSnap(platform).sites.flatMap((s) => s.devices).filter((d) => d.type === 'datafono');
       check('los 12 datáfonos en 2.14.3', datafonos.length === 12 && datafonos.every((d) => d.softwareVersion === '2.14.3'), [...new Set(datafonos.map((d) => d.softwareVersion))]);
-      check('caso de código resuelto por una persona', platform.cases.get(codeCase.id)?.resolvedBy === 'human', platform.cases.get(codeCase.id)?.status);
+      const again = await closeMergedPullRequest(platform, pr.id);
+      const fixEvents = events.filter((e) => e.type === 'domain' && e.event.name === 'code.fix_merged').length;
+      check('repetir el cierre es idempotente', again.ok && fixEvents === 1, `${fixEvents} eventos`);
     },
   },
   {
@@ -285,8 +290,10 @@ const blocks: Block[] = [
       const pr = bugsSnap(platform).prs[0];
       check('PR abierto con tests en verde', pr?.status === 'open' && pr.testsAfter.failed === 0 && pr.testsAfter.passed > 0, pr?.testsAfter && { passed: pr.testsAfter.passed, failed: pr.testsAfter.failed });
       const pending = platform.approvals.list({ caseId, status: 'pending' });
-      check('aprobación pendiente de bugs_merge_pr', pending.length === 1 && pending[0].tool === 'bugs_merge_pr', pending.map((a) => a.tool));
+      check('sin aprobaciones: el PR espera la fusión manual', pending.length === 0, pending.map((a) => a.tool));
       const record = platform.cases.get(caseId);
+      check('el agente termina tras abrir el PR', record?.status === 'resolved' && record.resolvedBy === 'agent', record?.status);
+      check('el resumen dice que lo fusiona una persona', /fusiona a mano en GitHub/.test(record?.summary ?? ''), short(record?.summary, 60));
       check('trazas llm con coste simulado', entries(record, (e) => e.kind === 'llm').length > 0 && (record?.costUsd ?? 0) > 0, record?.costUsd);
     },
   },

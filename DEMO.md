@@ -172,37 +172,30 @@ pestaña **Casos**.
 
    El resumen del agente tiene Diagnóstico, Acciones y Pendiente. En unos 3 segundos el caso pasa a
    «Resuelto por IA» (lo resuelve el agente).
-3. **Pestaña:** Código (en menos de 10 segundos desde el lanzamiento).
-   **Qué se ve:** en la lista «Pull requests», PR-1 «Liberar el terminal tras un timeout de cobro».
-   En el detalle, el estado «Pendiente de aprobación» (punto ámbar) y la rama
-   `fix/terminal-libera-tras-timeout` → `main`. Debajo, la barra «La fusión espera a una persona.».
-   - **Tests:** dos tarjetas. «Antes del arreglo» (`main`): 5 pasan y 1 falla, en rojo. «Con el
-     arreglo»: 6 pasan y 0 fallan, con «Todos pasan» en verde.
-   - **Diff contra main:** una línea añadida, `this.finish();`, con fondo verde, en la rama de timeout
-     de `src/terminal.ts`.
+3. **Pestaña:** Código (con IA real, en torno a un minuto desde el lanzamiento).
+   **Qué se ve:** en la lista «Pull requests», el PR del agente de código con su enlace **Ver en
+   GitHub ↗**: es un PR real contra `main` de este mismo repositorio, que cambia
+   `terminal-pagos/src/terminal.ts` (el producto vive en la carpeta `terminal-pagos/`).
+   - **Tests:** «Antes del arreglo» (`main`): 1 falla, en rojo. «Con el arreglo»: todos pasan.
+   - **Diff contra main:** el arreglo en la rama de timeout de `src/terminal.ts`.
    - **Versión actual:** etiqueta roja v2.14.2, «la desplegada en las tiendas».
 
    El enlace del caso abre «Posible bug en terminal-pagos 2.14.2», con el agente buscando, leyendo
-   el código, ejecutando tests, escribiendo el arreglo y abriendo el PR.
-4. **Pestaña:** Aprobaciones. Tarjeta «Fusionar PR-1 «Liberar el terminal tras un timeout de cobro»
-   y publicar terminal-pagos 2.14.3». Pulsa **Aprobar**.
-5. **Qué se ve:**
-   - **Código:** el PR pasa a «Fusionado» (punto verde), con la barra «Fusionado en main. La versión
-     v2.14.3 se despliega en los datáfonos.», y la etiqueta de versión actual se vuelve verde:
-     v2.14.3, «incluye PR-1».
-   - **Dispositivos:** las cifras marcan 12 en «Datáfonos en 2.14.3», en verde, y 0 en «Datáfonos en
-     2.14.2»; la versión de cada datáfono pasa a verde.
-   - **Resumen:** en Avisos aparece «Versión 2.14.3 desplegada en 12 datáfonos».
+   el código, ejecutando tests, escribiendo el arreglo y abriendo el PR. El agente no fusiona.
+4. **En GitHub:** abre el PR con **Ver en GitHub ↗**, enséñalo (descripción, diff) y pulsa **Merge
+   pull request**. Es una persona quien fusiona, siempre.
+5. **Qué se ve** (en unos 10 segundos, lo que tarda el sondeo en detectar la fusión):
+   - **Código:** el PR pasa a «Fusionado» y la versión actual se vuelve verde: v2.14.3.
+   - **Dispositivos:** los datáfonos pasan a 2.14.3, en verde.
+   - **Resumen:** en Avisos aparece «Versión 2.14.3 desplegada en … datáfonos».
 
 - **Qué decir:** «Aquí se ven los dos bucles. El rápido, la regla, mantiene las tiendas cobrando. El
-  lento quita la causa: un agente ve el patrón en cinco tiendas y otro lo arregla en el código. El
-  repositorio, los tests y el diff son reales, y fusionar sigue siendo decisión de una persona.»
+  lento quita la causa: un agente ve el patrón en cinco tiendas y otro lo arregla en el código, con
+  tests, y abre un PR de verdad. Fusionar es decisión de una persona, en GitHub, como con cualquier
+  compañero; la plataforma se entera sola y despliega.»
 
-> **Con GitHub conectado** (README § Conectar GitHub), el PR es de verdad: la cabecera de Código
-> muestra `GitHub · usuario/repo`, cada PR tiene **Ver en GitHub ↗** y **Aprobar** lo fusiona allí.
-> El diff incluye además la subida de versión en `package.json`, de modo que fusionar es publicar.
-> Los tests que validan el arreglo son los que el agente ejecuta antes de abrir el PR —los de las dos
-> tarjetas—, y sin ellos en verde no lo abre.
+> Tras fusionarlo, `main` ya lleva el arreglo en `terminal-pagos/`. Para repetir la demo otro día,
+> pulsa **Revert** en ese PR en GitHub.
 
 ## Paso 6 · Facturas: reglas frente a IA (1,5 min)
 
@@ -284,15 +277,17 @@ pestaña **Casos**.
   (manifiesto, prompt, herramientas, index del proyecto, políticas, `.env.example` y registro), la
   validación de la plataforma paso a paso, las variables nuevas y el diff. Con GitHub conectado, el
   PR está también en el repositorio con enlace directo.
-- **Aprobar:** la barra «La fusión espera a una persona» lleva a Aprobaciones. Al aprobar, el PR se
-  fusiona y el agente queda **activo sin reiniciar**: aparece en Agentes, sus herramientas en El dial
-  (lecturas en *Hace sola*, escrituras en *Pide permiso*) y un escenario «Probar …» en el Director.
+- **Fusionar:** **Abrir en GitHub** lleva al PR real (unos 7 ficheros). Revísalo y pulsa **Merge pull
+  request**. En unos 10 segundos la plataforma detecta la fusión, se trae el código y el agente queda
+  **activo sin reiniciar**: aparece en Agentes, sus herramientas en El dial (lecturas en *Hace sola*,
+  escrituras en *Pide permiso*) y un escenario «Probar …» en el Director. El agente creador nunca
+  fusiona.
 - **Qué decir:** «Esto es cómo crece la plataforma: alguien de negocio describe el agente, la IA escribe
   el código usando solo los conectores de la plataforma, y la plataforma decide lo delicado: nombres,
   riesgo y nivel de autonomía de cada herramienta, qué variables hacen falta. Nada entra sin validar
-  y sin que una persona apruebe el PR. Las escrituras nacen pidiendo permiso; ya se subirán en el dial
+  y sin que una persona fusione el PR. Las escrituras nacen pidiendo permiso; ya se subirán en el dial
   cuando se ganen la confianza.»
-- **Si no hay tiempo:** enseña un PR ya creado y aprueba la fusión en directo.
+- **Si no hay tiempo:** enseña un PR ya creado y fusiónalo en directo en GitHub.
 
 ## Cierre con métricas (1 min)
 

@@ -1,9 +1,10 @@
 /**
  * Proyecto "Código": un agente que investiga bugs sospechados en terminal-pagos sobre un
- * repositorio git real, lo arregla en una rama, abre un PR y pide la fusión.
+ * repositorio git real, lo arregla en una rama y abre un PR. El agente no fusiona: el PR lo fusiona
+ * una persona a mano en GitHub y el sondeo hace el cierre (versión nueva en los datáfonos).
  */
 import type { Case, PlatformApi, ProjectModule, Rule, Scenario } from '../../platform/contracts.ts';
-import { describeGitHubError, GuardError, linkFor, stopAllLinks } from './github.ts';
+import { linkFor, REMOTE_DIR, stopAllLinks } from './github.ts';
 import { bugsMock } from './mock.ts';
 import { displayPath, repoFor, type TerminalRepo } from './repo.ts';
 import { AGENT_ID, COMPONENT, PROJECT_ID, getState, hasState, saveState } from './state.ts';
@@ -25,8 +26,8 @@ const RULE_ID = 'bugs.sospecha_de_bug';
 const AGENT_TASK =
   'Operaciones sospecha que hay un bug en terminal-pagos; la evidencia está en los datos del caso. ' +
   'Reproduce el problema con los tests, localiza la causa raíz y, si es un bug de este código, propone el ' +
-  'arreglo mínimo en una rama, comprueba que los tests pasan, abre un PR y solicita la fusión con bugs_merge_pr. ' +
-  'Si la evidencia apunta fuera del código, explícalo y no cambies nada.';
+  'arreglo mínimo en una rama fix/…, comprueba que los tests pasan y abre un PR. No fusiones: el PR lo revisa y ' +
+  'lo fusiona una persona a mano en GitHub. Si la evidencia apunta fuera del código, explícalo y no cambies nada.';
 
 function findOpenCodeCase(platform: PlatformApi, component: string): Case | undefined {
   return platform.cases.findOpen(
@@ -118,7 +119,7 @@ const analyzeScenario: Scenario = {
   title: 'Investigar la causa raíz de los bloqueos',
   description:
     'Envía al agente de código una sospecha de bug con evidencia de los dispositivos. Reproduce el fallo con tests reales, ' +
-    'lo arregla en una rama y abre un PR; la fusión queda pendiente de aprobación.',
+    'lo arregla en una rama y abre un PR; una persona lo revisa y lo fusiona a mano en GitHub.',
   order: 60,
   async run(platform) {
     const previous = findOpenCodeCase(platform, COMPONENT);
@@ -143,14 +144,12 @@ async function saveRepoState(platform: PlatformApi, repo: TerminalRepo, patch: P
 }
 
 /**
- * Deja el repositorio listo. Con `keepExisting` conserva el trabajo previo si el estado sigue ahí.
+ * Deja el repositorio local listo. Con `keepExisting` conserva el trabajo previo si el estado sigue ahí
+ * y es del mismo modo (mismo repositorio de GitHub, o local).
  *
- * Con GitHub configurado y validado:
- * - sin estado previo (o con uno de otro modo o de otro repositorio), o al reiniciar: plantilla nueva
- *   en local y, si el remoto pasa la guarda, force-push de la rama base, cierre de los PRs de la demo y
- *   borrado de sus ramas;
- * - con estado previo del mismo repositorio: solo configura el remoto y hace fetch.
- * Si algo falla o el remoto no pasa la guarda, sigue en local con un aviso visible.
+ * El repositorio local nunca tiene remoto y esto nunca toca GitHub: con GitHub configurado solo se
+ * valida el token contra el repositorio (lectura). «Reiniciar demo» recrea el repositorio local desde
+ * la plantilla y deja en GitHub lo que haya (PRs abiertos incluidos).
  */
 async function prepareRepo(platform: PlatformApi, keepExisting: boolean): Promise<void> {
   const repo = repoFor(platform);
@@ -160,82 +159,35 @@ async function prepareRepo(platform: PlatformApi, keepExisting: boolean): Promis
 
   await repo.exclusive(async () => {
     const settings = await link.connect();
+    if (settings) link.activate();
+    // Con qué se enlazó el estado: el repositorio de la plataforma y la carpeta del producto.
+    const binding = settings ? `${settings.repo}/${REMOTE_DIR}` : undefined;
     const previous = keepExisting && hasState(platform) && (await repo.isReady()) ? getState(platform) : undefined;
 
-    if (!settings) {
-      // Modo local. Si GitHub estaba configurado pero no se puede usar, no se tira el trabajo previo.
-      if (previous && (!previous.boundRepo || link.configured)) {
-        await repo.checkoutMain();
-        await saveRepoState(platform, repo);
-      } else {
-        await repo.recreate();
-        await saveRepoState(platform, repo, { prs: [], boundRepo: undefined });
-      }
-      link.announceWarning();
-      return;
-    }
-
-    if (previous && previous.boundRepo === settings.repo) {
-      try {
-        await link.useRemote(repo);
-        const { empty } = await link.assertDemoRepo(repo);
-        if (!empty) await link.fetchBase(repo);
-        link.activate();
-      } catch (error) {
-        link.fallback(fallbackReason(settings.repo, error));
-      }
+    // Mismo modo y mismo repositorio; o GitHub configurado pero sin poder usarse (no se tira el trabajo).
+    const keep = previous && (previous.boundRepo === binding || (!settings && link.configured));
+    if (keep) {
+      await repo.removeRemote(); // restos de versiones anteriores de la demo: el repositorio es solo local
       await repo.checkoutMain();
       await saveRepoState(platform, repo);
-      link.announceWarning();
-      return;
+    } else {
+      await repo.recreate();
+      await saveRepoState(platform, repo, { prs: [], boundRepo: binding });
     }
-
-    if (previous) {
-      // Hay trabajo local de otro modo o de otro repositorio: antes de tirarlo, el remoto tiene que
-      // pasar la guarda. Si no la pasa, se conserva tal cual y se sigue en local.
-      try {
-        await link.useRemote(repo);
-        await link.assertDemoRepo(repo);
-      } catch (error) {
-        link.fallback(fallbackReason(settings.repo, error));
-        await repo.removeRemote();
-        await repo.checkoutMain();
-        await saveRepoState(platform, repo);
-        link.announceWarning();
-        return;
-      }
-    }
-
-    await repo.recreate();
-    await saveRepoState(platform, repo, { prs: [], boundRepo: undefined });
-    try {
-      await link.useRemote(repo);
-      await link.resetRemote(repo);
-      link.activate();
-      await saveRepoState(platform, repo, { boundRepo: settings.repo });
-    } catch (error) {
-      link.fallback(fallbackReason(settings.repo, error));
-      await repo.removeRemote();
-      link.announceWarning();
-    }
+    link.announceWarning();
   });
 
   if (link.mode === 'github') {
-    console.log(`[bugs] Repositorio de GitHub conectado: ${link.settings?.repo}`);
+    console.log(`[bugs] GitHub conectado: los PRs se abren en ${link.settings?.repo} (${REMOTE_DIR}/) y se fusionan a mano.`);
     link.schedule(1_000);
   }
-}
-
-function fallbackReason(repo: string, error: unknown): string {
-  if (error instanceof GuardError) return error.message;
-  return `No se puede usar GitHub (${repo}): ${describeGitHubError(error)} El proyecto Código trabaja en local.`;
 }
 
 export const bugs: ProjectModule = {
   id: PROJECT_ID,
   name: 'Código',
   description:
-    'Un agente investiga los bugs que sospecha operaciones en terminal-pagos: reproduce con tests reales, arregla en una rama y abre un PR.',
+    'Un agente investiga los bugs que sospecha operaciones en terminal-pagos: reproduce con tests reales, arregla en una rama y abre un PR que una persona fusiona a mano en GitHub.',
   tools: bugsTools,
   rules: [suspectedBugRule],
   mocks: { [AGENT_ID]: bugsMock },

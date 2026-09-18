@@ -3,8 +3,8 @@
  *
  * Cada turno decide el siguiente paso a partir del resultado REAL de la herramienta
  * anterior: busca, lee, reproduce con tests, construye el arreglo a partir del fichero
- * leído, lo verifica en la rama, abre el PR y pide la fusión. Si la política no deja
- * ejecutar algo, se detiene y lo explica; nunca intenta rodearla.
+ * leído, lo verifica en la rama y abre el PR. Ahí termina: el PR lo fusiona una persona a mano
+ * en GitHub. Si la política no deja ejecutar algo, se detiene y lo explica; nunca intenta rodearla.
  */
 import type { MockContext, MockScript, MockToolResult, MockTurn } from '../../platform/contracts.ts';
 import { bumpPatch, clip, COMPONENT, getState } from './state.ts';
@@ -87,7 +87,7 @@ function prDescription(ctx: MockContext, before: TestData, after: TestData, bran
     '',
     '## Riesgo y despliegue',
     `Bajo: el cambio solo afecta a la rama de timeout. Al fusionar se publica ${COMPONENT} ${nextVersion(ctx)} ` +
-      'y se despliega en los datáfonos.',
+      'y se despliega en los datáfonos. La fusión la hace una persona a mano en GitHub tras revisar el PR.',
   ].join('\n');
 }
 
@@ -125,26 +125,14 @@ function notReproducedReport(ctx: MockContext, tests: TestData): string {
   ].join('\n');
 }
 
-function finalReport(ctx: MockContext, merge: MockToolResult): string {
-  const pr = lastOk(ctx, 'bugs_open_pr')?.data as { id: string; branch: string } | undefined;
-  const prId = pr?.id ?? String(merge.input?.prId ?? 'el PR');
+function finalReport(ctx: MockContext, open: MockToolResult): string {
+  const pr = open.data as { id: string; branch: string; version?: string; github?: { number: number; url: string } } | undefined;
+  const prId = pr?.id ?? 'el PR';
   const branch = pr?.branch ?? FIX_BRANCH;
   const before = testsOn(ctx, 'main');
   const after = testsOn(ctx, branch);
-
-  let outcome: string;
-  if (merge.executed && merge.ok) {
-    const version = (merge.data as { newVersion?: string } | undefined)?.newVersion ?? getState(ctx.platform).version;
-    outcome = `Fusionado: ${prId} está en main y ${COMPONENT} pasa a ${version}; se despliega en los datáfonos. Pendiente: comprobar en tienda que no vuelven los bloqueos.`;
-  } else if (merge.decision === 'approve') {
-    outcome = `Pendiente: la fusión de ${prId} espera aprobación humana. Al aprobarla se publica ${COMPONENT} ${nextVersion(ctx)} y se despliega en los datáfonos.`;
-  } else if (merge.decision === 'shadow') {
-    outcome = `Pendiente: el dial tiene bugs_merge_pr en modo sombra, así que la fusión de ${prId} se ha registrado pero no se ha ejecutado.`;
-  } else if (merge.decision === 'deny' || merge.decision === 'escalate') {
-    outcome = `Pendiente: la política no permite fusionar ${prId} (${merge.content}). Queda en manos de una persona.`;
-  } else {
-    outcome = `Pendiente: la fusión de ${prId} ha fallado (${clip(merge.content, 300)}). Hay que revisarla a mano.`;
-  }
+  const version = pr?.version ?? nextVersion(ctx);
+  const where = pr?.github ? `en GitHub (#${pr.github.number}, ${pr.github.url})` : 'en la consola';
 
   return [
     `Diagnóstico: bug confirmado en ${COMPONENT}.`,
@@ -157,9 +145,10 @@ function finalReport(ctx: MockContext, merge: MockToolResult): string {
     'Hecho:',
     before ? `- Reproducido en main: ${countLine(before)}.` : '- Reproducido en main con los tests.',
     `- Arreglo de una línea en la rama ${branch}: llamar a finish() también en la rama de timeout.`,
-    after ? `- ${prId} abierto con los tests en verde: ${countLine(after)}.` : `- ${prId} abierto.`,
+    after ? `- ${prId} abierto ${where} con los tests en verde: ${countLine(after)}.` : `- ${prId} abierto ${where}.`,
     '',
-    outcome,
+    `Pendiente: una persona revisa ${prId} y lo fusiona a mano en GitHub; yo no lo fusiono. Al fusionarlo se publica ` +
+      `${COMPONENT} ${version} y se despliega en los datáfonos. Después, comprobar en tienda que no vuelven los bloqueos.`,
   ].join('\n');
 }
 
@@ -173,8 +162,6 @@ export const bugsMock: MockScript = (ctx): MockTurn => {
     };
   }
 
-  // La fusión es el último paso haya pasado lo que haya pasado (lo normal: queda en aprobación).
-  if (last.name === 'bugs_merge_pr') return { text: finalReport(ctx, last) };
   if (!last.executed || !last.ok) return { text: stoppedReport(last) };
 
   switch (last.name) {
@@ -244,13 +231,9 @@ export const bugsMock: MockScript = (ctx): MockTurn => {
       };
     }
 
-    case 'bugs_open_pr': {
-      const pr = last.data as { id: string };
-      return {
-        text: `${pr.id} abierto con los tests en verde. Pido la fusión; es una acción que llega a los datáfonos y la decide una persona.`,
-        toolCalls: [{ name: 'bugs_merge_pr', input: { prId: pr.id } }],
-      };
-    }
+    // Abrir el PR es el último paso: la fusión la hace una persona a mano en GitHub.
+    case 'bugs_open_pr':
+      return { text: finalReport(ctx, last) };
 
     default:
       return { text: 'He terminado la investigación sin un siguiente paso claro. Dejo el caso para revisión.' };

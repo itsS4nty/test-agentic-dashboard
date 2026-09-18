@@ -1,10 +1,12 @@
 /**
  * Herramientas del agente de código sobre el repositorio real de terminal-pagos.
- * Las de lectura no cambian nada; las de código crean ramas, PRs y fusiones.
- * Con GitHub conectado (github.ts), además suben las ramas, abren el PR y fusionan allí.
+ * Las de lectura no cambian nada; las de código crean ramas y PRs. El agente nunca fusiona:
+ * el PR lo fusiona una persona a mano en GitHub y el sondeo (sync.ts) hace el cierre en local.
+ * Con GitHub conectado (github.ts), abrir el PR crea la rama `fix/…` y el PR en el repositorio de
+ * la plataforma, con los cambios bajo `terminal-pagos/`, solo a través de la API.
  */
 import type { PlatformApi, ToolDefinition, ToolResult } from '../../platform/contracts.ts';
-import { describeGitHubError, linkFor, PR_MARKER } from './github.ts';
+import { describeGitHubError, FIX_BRANCH_PREFIX, linkFor, PR_MARKER, REMOTE_DIR, type BranchFile } from './github.ts';
 import { repoFor, TEST_COMMAND, type TerminalRepo, type TestRun } from './repo.ts';
 import {
   COMPONENT,
@@ -38,6 +40,9 @@ function branchProblem(branch: string): string | null {
     branch.endsWith('.lock');
   if (invalid) return `Nombre de rama no válido: "${branch}". Usa algo como fix/descripcion-corta.`;
   if (branch === 'main') return 'No se escribe directamente en main: trabaja en una rama fix/…';
+  if (!branch.startsWith(FIX_BRANCH_PREFIX) || branch.length <= FIX_BRANCH_PREFIX.length) {
+    return `La rama tiene que empezar por ${FIX_BRANCH_PREFIX} (por ejemplo, fix/descripcion-corta).`;
+  }
   return null;
 }
 
@@ -89,6 +94,32 @@ async function ensureReleaseCommit(repo: TerminalRepo, branch: string): Promise<
   });
 }
 
+/** Ficheros de la rama que cambian respecto a main, con su contenido final (null = borrado). */
+async function changedFiles(repo: TerminalRepo, branch: string): Promise<BranchFile[]> {
+  const { stdout } = await repo.git(['diff', '--name-status', '--no-renames', '-z', `main...${branch}`]);
+  const parts = stdout.split('\0').filter(Boolean);
+  const files: BranchFile[] = [];
+  for (let i = 0; i + 1 < parts.length; i += 2) {
+    const status = parts[i];
+    const path = parts[i + 1];
+    if (status.startsWith('D')) {
+      files.push({ path, content: null });
+      continue;
+    }
+    const { stdout: entry } = await repo.git(['ls-tree', branch, '--', path]);
+    const mode = entry.startsWith('100755') ? '100755' : '100644';
+    const { stdout: content } = await repo.git(['show', `${branch}:${path}`]);
+    files.push({ path, content, mode });
+  }
+  return files;
+}
+
+/** Mensaje del commit en GitHub: los mensajes de los commits de la rama, en orden. */
+async function branchMessage(repo: TerminalRepo, branch: string, title: string): Promise<string> {
+  const { stdout } = await repo.git(['log', '--reverse', '--format=%B', `main..${branch}`]);
+  return stdout.trim() || title;
+}
+
 /** Cuerpo del PR en GitHub: descripción del agente, tests en local y la marca de la demo. */
 function pullBody(description: string, before: TestSummary, after: TestSummary, branch: string): string {
   return [
@@ -98,7 +129,9 @@ function pullBody(description: string, before: TestSummary, after: TestSummary, 
     '',
     `**Tests en local** · \`main\`: ${testLine(before)} → \`${branch}\`: ${testLine(after)}.`,
     '',
-    '_Abierto por el agente de código de la demo. «Reiniciar demo» cierra este PR y borra su rama._',
+    `**Fusión manual.** Este PR lo abre el agente de código de la demo con los cambios en \`${REMOTE_DIR}/\`. ` +
+      'El agente no lo fusiona: una persona lo revisa y lo fusiona a mano aquí, en GitHub. Al detectar la fusión, ' +
+      `la demo publica la versión nueva de ${COMPONENT} y la despliega en los datáfonos.`,
     '',
     PR_MARKER,
   ].join('\n');
@@ -225,8 +258,7 @@ const proposeFix: ToolDefinition<ProposeFixInput> = {
   description:
     'Crea una rama desde main (o añade un commit si la rama ya existe), escribe el contenido COMPLETO de cada ' +
     'fichero indicado y hace commit. Nunca toca main. Devuelve el diff acumulado de la rama contra main. ' +
-    'Si hay un repositorio de GitHub conectado, sube también la rama. ' +
-    'Cambia solo lo imprescindible para arreglar el bug.',
+    'La rama tiene que empezar por fix/. Cambia solo lo imprescindible para arreglar el bug.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -304,22 +336,9 @@ const proposeFix: ToolDefinition<ProposeFixInput> = {
         ? `Commit ${commit} en la rama ${branch} (${existed ? 'rama existente' : 'nueva, creada desde main'}): ${paths.join(', ')}.`
         : `La rama ${branch} ya contenía exactamente estos cambios; no hay commit nuevo.`;
 
-      const link = linkFor(platform);
-      let pushed = '';
-      if (link.mode === 'github') {
-        try {
-          await link.pushBranch(repo, branch);
-          pushed = `\nRama subida a GitHub (${link.settings?.repo}).`;
-        } catch (error) {
-          return fail(
-            `${headline}\nEl commit está en local, pero no se ha podido subir la rama a GitHub: ${describeGitHubError(error)}`,
-            { branch, commit, files: paths },
-          );
-        }
-      }
       return {
         ok: true,
-        content: `${headline}${pushed}\nDiff contra main: +${added} −${removed} líneas.\n\n${clip(diff, 4000)}`,
+        content: `${headline}\nDiff contra main: +${added} −${removed} líneas.\n\n${clip(diff, 4000)}`,
         data: { branch, commit, files: paths, diff },
       };
     });
@@ -339,8 +358,9 @@ const openPr: ToolDefinition<OpenPrInput> = {
   description:
     'Abre un pull request de la rama hacia main: ejecuta los tests en main y en la rama, añade a la rama un commit ' +
     'que sube la versión de parche (así fusionar es publicar), calcula el diff y registra el PR. Si hay un ' +
-    'repositorio de GitHub conectado, sube la rama y abre allí el PR. Si en la rama falla algún test, el PR no se ' +
-    'abre. La descripción debe explicar diagnóstico, causa raíz, arreglo y resultado de los tests antes y después.',
+    'repositorio de GitHub conectado, crea allí la rama y el PR. Si en la rama falla algún test, el PR no se ' +
+    'abre. Es el último paso del agente: el PR lo revisa y lo fusiona una persona a mano en GitHub. ' +
+    'La descripción debe explicar diagnóstico, causa raíz, arreglo y resultado de los tests antes y después.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -389,7 +409,11 @@ const openPr: ToolDefinition<OpenPrInput> = {
       let github: GitHubPullRequest | undefined;
       if (link.mode === 'github') {
         try {
-          await link.pushBranch(repo, branch);
+          await link.publishFixBranch({
+            branch,
+            files: await changedFiles(repo, branch),
+            message: await branchMessage(repo, branch, title),
+          });
           github = await link.openPull({
             number: existing?.github?.number,
             branch,
@@ -430,11 +454,13 @@ const openPr: ToolDefinition<OpenPrInput> = {
         ok: true,
         content:
           `${existing ? 'Actualizado' : 'Abierto'} ${pr.id} «${title}» (${branch} → main).\n` +
-          (github ? `En GitHub: #${github.number} ${github.url} (el repositorio no tiene CI: valen los tests de aquí).\n` : '') +
+          (github ? `En GitHub: #${github.number} ${github.url} (cambios en ${REMOTE_DIR}/; valen los tests de aquí).\n` : '') +
           `Tests en main: ${testLine(before)}. Tests en la rama: ${testLine(after)}.\n` +
           `${release ? 'Añadido a la rama el commit de versión' : 'La rama ya incluía la versión'}: al fusionar se publica ${COMPONENT} ${version}.\n` +
           `Diff: +${added} −${removed} líneas.\n` +
-          `Para fusionarlo, usa bugs_merge_pr con prId "${pr.id}".`,
+          (github
+            ? `El PR queda abierto: lo revisa y lo fusiona una persona a mano en GitHub. Tu trabajo termina aquí; no intentes fusionarlo.`
+            : `El PR queda abierto para revisión humana (sin GitHub conectado no se fusiona desde aquí). Tu trabajo termina aquí.`),
         data: {
           id: pr.id,
           branch,
@@ -478,7 +504,16 @@ async function releaseIfNeeded(repo: TerminalRepo, previousVersion: string): Pro
 }
 
 async function mergeLocally(platform: PlatformApi, repo: TerminalRepo, pr: PullRequest): Promise<MergeOutcome> {
-  if (pr.status === 'merged') return { result: fail(`${pr.id} ya está fusionado.`) };
+  if (pr.status === 'merged') {
+    const state = getState(platform);
+    return {
+      result: {
+        ok: true,
+        content: `${pr.id}${pr.github ? ` (#${pr.github.number})` : ''} ya estaba fusionado; ${COMPONENT} está en ${state.version}.`,
+        data: { prId: pr.id, branch: pr.branch, newVersion: state.version, alreadyMerged: true },
+      },
+    };
+  }
   if (!(await repo.branchExists(pr.branch))) return { result: fail(`La rama ${pr.branch} de ${pr.id} ya no existe.`) };
 
   await repo.checkoutMain();
@@ -501,92 +536,20 @@ async function mergeLocally(platform: PlatformApi, repo: TerminalRepo, pr: PullR
     result: {
       ok: true,
       content:
-        `${pr.id} fusionado en main (commit ${commit}). ${COMPONENT} pasa de ${previousVersion} a ${newVersion}; ` +
-        'la nueva versión se desplegará en los datáfonos.',
-      data: { prId: pr.id, branch: pr.branch, previousVersion, newVersion, commit },
-    },
-  };
-}
-
-async function mergeOnGitHub(platform: PlatformApi, repo: TerminalRepo, pr: PullRequest): Promise<MergeOutcome> {
-  const link = linkFor(platform);
-  const state = getState(platform);
-  if (pr.status === 'merged') {
-    return {
-      result: {
-        ok: true,
-        content: `${pr.id}${pr.github ? ` (#${pr.github.number})` : ''} ya estaba fusionado; ${COMPONENT} está en ${state.version}.`,
-        data: { prId: pr.id, branch: pr.branch, newVersion: state.version, alreadyMerged: true },
-      },
-    };
-  }
-  if (!pr.github) {
-    return {
-      result: fail(
-        `${pr.id} no está en GitHub: se abrió sin conexión. Vuelve a abrirlo con bugs_open_pr (rama ${pr.branch}) ` +
-          'para publicarlo en GitHub antes de fusionar.',
-      ),
-    };
-  }
-
-  const number = pr.github.number;
-  const base = link.settings?.baseBranch ?? 'main';
-  let previousVersion: string;
-  let mergedOnGitHub: boolean;
-  let headSha: string;
-  try {
-    const remote = await link.getPull(number);
-    headSha = remote.headSha;
-    if (!remote.merged && remote.state === 'closed') {
-      replacePr(platform, { ...pr, status: 'closed', closedAt: now() });
-      return { result: fail(`${pr.id} (#${number}) está cerrado en GitHub sin fusionar; no se fusiona.`) };
-    }
-    mergedOnGitHub = remote.merged;
-    await repo.checkoutMain();
-    previousVersion = await repo.readVersion();
-    if (!remote.merged) await link.mergePull(number, { sha: pr.headSha, title: `Fusiona ${pr.id}: ${pr.title}` });
-    await link.syncMain(repo);
-  } catch (error) {
-    return { result: fail(`No se ha podido fusionar ${pr.id} (#${number}) en GitHub: ${describeGitHubError(error)}`) };
-  }
-
-  let newVersion: string;
-  try {
-    const release = await releaseIfNeeded(repo, previousVersion);
-    if (release.committed) await link.pushMain(repo);
-    newVersion = release.version;
-  } catch (error) {
-    return {
-      result: fail(
-        `${pr.id} (#${number}) está fusionado en GitHub, pero no se ha podido publicar la versión nueva: ${describeGitHubError(error)}`,
-      ),
-    };
-  }
-
-  const commit = await repo.headCommit();
-  const ci = await link.ciStatus(pr.headSha ?? headSha);
-  const merged: PullRequest = { ...pr, status: 'merged', mergedAt: now(), github: { ...pr.github, ci } };
-  replacePr(platform, merged, { version: newVersion, branches: await repo.branches() });
-  return {
-    merged,
-    newVersion,
-    result: {
-      ok: true,
-      content:
-        `${pr.id} (#${number}) ${mergedOnGitHub ? 'ya estaba fusionado directamente en GitHub' : 'fusionado en GitHub'} ` +
-        `en ${base} (commit ${commit}). ${COMPONENT} pasa de ${previousVersion} a ${newVersion}; ` +
-        'la nueva versión se desplegará en los datáfonos.',
+        `${pr.id}${pr.github ? ` (#${pr.github.number}, fusionado a mano en GitHub)` : ''} fusionado en main (commit ${commit}). ` +
+        `${COMPONENT} pasa de ${previousVersion} a ${newVersion}; la nueva versión se desplegará en los datáfonos.`,
       data: { prId: pr.id, branch: pr.branch, previousVersion, newVersion, commit, github: merged.github },
     },
   };
 }
 
 /**
- * Fusiona un PR y publica la versión: en local con git, o en GitHub si está conectado (idempotente:
- * si ya está fusionado allí, solo trae main). Emite `code.fix_merged` cuando hay versión nueva.
- * La usan la herramienta `bugs_merge_pr` y el sondeo de GitHub.
+ * Cierre de un PR que una persona ha fusionado a mano en GitHub (lo llama el sondeo, sync.ts; el
+ * smoke lo llama directamente para simular esa fusión). No hace NINGUNA operación remota: fusiona la
+ * rama en el `main` del repositorio local, publica la versión de parche y emite `code.fix_merged`
+ * (dispositivo la despliega en los datáfonos). Es idempotente: si ya estaba fusionado, no repite nada.
  */
-export async function mergePullRequest(platform: PlatformApi, prId: string): Promise<ToolResult> {
+export async function closeMergedPullRequest(platform: PlatformApi, prId: string): Promise<ToolResult> {
   const repo = repoFor(platform);
   const outcome = await repo.exclusive(async (): Promise<MergeOutcome> => {
     const state = getState(platform);
@@ -595,7 +558,7 @@ export async function mergePullRequest(platform: PlatformApi, prId: string): Pro
     if (pr.status === 'closed') {
       return { result: fail(`${pr.id} está cerrado sin fusionar${pr.github ? ' en GitHub' : ''}; no se puede fusionar.`) };
     }
-    return linkFor(platform).mode === 'github' ? mergeOnGitHub(platform, repo, pr) : mergeLocally(platform, repo, pr);
+    return mergeLocally(platform, repo, pr);
   });
 
   // Fuera del cerrojo: las reglas de otros proyectos pueden tardar o volver a llamar aquí.
@@ -611,29 +574,4 @@ export async function mergePullRequest(platform: PlatformApi, prId: string): Pro
   return outcome.result;
 }
 
-const mergePr: ToolDefinition<{ prId: string }> = {
-  name: 'bugs_merge_pr',
-  project: PROJECT_ID,
-  risk: 'code',
-  description:
-    'Fusiona un PR abierto en main, publica la siguiente versión de parche de terminal-pagos y avisa a dispositivos ' +
-    'para que la despliegue en los datáfonos. Con GitHub conectado, la fusión se hace en GitHub. ' +
-    'Llega a producción: normalmente requiere aprobación humana.',
-  inputSchema: {
-    type: 'object',
-    properties: { prId: { type: 'string', description: 'Identificador del PR, por ejemplo PR-1.' } },
-    required: ['prId'],
-  },
-  describe(input, platform) {
-    const state = getState(platform);
-    const pr = state.prs.find((item) => item.id === input?.prId);
-    return pr
-      ? `Fusionar ${pr.id} «${pr.title}» y publicar ${COMPONENT} ${bumpPatch(state.version)}`
-      : `Fusionar ${String(input?.prId)} en main`;
-  },
-  async handler(input, { platform }) {
-    return mergePullRequest(platform, text(input?.prId));
-  },
-};
-
-export const bugsTools: ToolDefinition[] = [listFiles, readFileTool, searchCode, runTests, proposeFix, openPr, mergePr];
+export const bugsTools: ToolDefinition[] = [listFiles, readFileTool, searchCode, runTests, proposeFix, openPr];
