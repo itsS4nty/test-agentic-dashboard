@@ -117,67 +117,38 @@ Los agentes piden un tier en su manifiesto, nunca un modelo. El modelo se cambia
 En modo simulado, la consola muestra los IDs de la Claude API, y en la traza llevan el sufijo
 `(simulado)`.
 
-> Los proveedores reales están implementados, pero no se han probado contra la API real en este
-> repositorio. Todo lo verificado de punta a punta usa el modo simulado.
+> Probado de punta a punta con la API de Claude real el 18/09/2026. Bedrock está implementado
+> pero sin probar: no se han usado credenciales de AWS.
 
 ## Conectar GitHub
 
-Opcional. Por defecto el proyecto Código trabaja con un repositorio git local
-(`data/repos/terminal-pagos`). Con GitHub conectado, el agente de código sube su rama y abre un pull
-request **real** en un repositorio dedicado a la demo, y **Aprobar** la fusión en la consola la hace
-en GitHub. La pestaña Código enlaza cada PR.
+Opcional, y es como se enseña la demo. Todo vive en un único repositorio y una rama (`main`): la
+plataforma, los agentes y el producto que mantiene el agente de código (`terminal-pagos/`).
 
-La demo no añade CI al repositorio: los tests que validan el arreglo son los que ejecuta el agente
-antes de abrir el PR (en `main` y en la rama; si falla alguno, no lo abre), y se ven en la pestaña
-Código.
+- **Agente de código:** trabaja en un repositorio git local (`data/repos/terminal-pagos`), ejecuta los
+  tests y, si el arreglo los pasa, abre un PR **real** contra `main` de este repositorio que cambia
+  `terminal-pagos/`. Lo crea por la API de GitHub: solo escribe ramas `fix/…` marcadas por la demo y PRs.
+- **Agente creador:** escribe el agente nuevo en una rama `agente/<id>` y abre el PR contra `main`.
+- **Ningún agente fusiona.** Fusiona una persona en GitHub. La plataforma consulta GitHub cada 10 s:
+  al ver el PR fusionado, publica la versión 2.14.3 en los datáfonos (bug) o se trae el código y
+  activa el agente sin reiniciar (creador). Si se cierra sin fusionar, queda cerrado.
+- **Nada reescribe `main` en GitHub**: ni force-push ni borrado de ramas. «Reiniciar demo» no toca GitHub.
 
-1. **Crea un repositorio vacío dedicado a la demo** (puede ser privado): sin README, sin `.gitignore`
-   y sin licencia. La demo reescribe su rama principal: no uses uno con trabajo que quieras conservar.
-2. **Crea un token fine-grained** (GitHub → Settings → Developer settings → Personal access tokens →
-   Fine-grained tokens) con acceso **solo a ese repositorio** y estos permisos:
+Para conectarlo, un token fine-grained con acceso solo a este repositorio (Contents y Pull requests:
+lectura y escritura) en `.env`, nunca en el chat ni en git:
 
-   | Permiso | Acceso | Para qué |
-   |---|---|---|
-   | Contents | Lectura y escritura | subir la plantilla y las ramas, fusionar |
-   | Pull requests | Lectura y escritura | abrir, fusionar y cerrar PRs |
-   | Metadata | Lectura | obligatorio en los tokens fine-grained (GitHub lo marca solo) |
-   | Actions | Lectura | opcional: solo si algún día añades tú un workflow al repositorio, para que la consola muestre su resultado junto al PR |
+```sh
+GITHUB_TOKEN=github_pat_…
+# Opcional: por defecto se usa el origin de este clon
+GITHUB_REPO=owner/nombre
+```
 
-3. **Ponlo en `.env`**, nunca en el chat ni en git (`.env` está en `.gitignore`):
+Si algo falla (token inválido, sin permisos, sin red), todo sigue en local y la consola lo avisa. El
+token no aparece en trazas, avisos, respuestas de la API ni `.git/config`. Para forzar el modo local:
+`DEMO_GITHUB=off`.
 
-   ```sh
-   GITHUB_TOKEN=github_pat_…
-   GITHUB_REPO=tu-usuario/terminal-pagos-demo
-   ```
-
-4. **Reinicia el servidor.** La terminal muestra `[bugs] Repositorio de GitHub conectado: …` y la
-   pestaña Código, el distintivo `GitHub · tu-usuario/terminal-pagos-demo`.
-
-La primera vez, la demo sube a `main` la plantilla de `terminal-pagos` con el fichero
-`.agentes-demo`, que marca el repositorio como de la demo. La plantilla no lleva ningún workflow: no
-se ejecuta nada en GitHub y la cuenta no gasta minutos de Actions. Quien clone el repositorio puede
-ejecutar los tests a mano con `npm test`.
-
-**«Reiniciar demo» con GitHub.** Deja `main` como la plantilla (force-push), cierra los PRs abiertos
-por la demo (los reconoce por una marca en el cuerpo) y borra las ramas de los PRs de la demo. Solo
-toca el repositorio si está vacío o si su `main` tiene `.agentes-demo`; si no, no cambia nada, el
-proyecto sigue en local y la pestaña Código lo avisa. La misma guarda se aplica al arrancar.
-
-**Fusionar o cerrar desde GitHub.** Con PRs abiertos, la demo consulta GitHub cada 10 s. Si alguien
-fusiona el PR en GitHub, publica la versión igual que al aprobarlo en la consola y da la aprobación
-por buena con «GitHub» como autor. Si lo cierra sin fusionar, la aprobación queda rechazada.
-
-**Si algo falla** (token inválido o caducado, sin permisos, repositorio inexistente, sin red), el
-proyecto Código trabaja en local y lo avisa en la consola. El token no aparece en trazas, avisos,
-respuestas de la API ni `.git/config`: git lo recibe por variables de entorno.
-
-**Volver a modo local:** `DEMO_GITHUB=off` en `.env` y reinicia. Al cambiar de modo, el proyecto
-Código empieza de nuevo desde la plantilla; si quedaba un caso de código abierto, pulsa **Reiniciar
-demo** antes de lanzar otra vez el escenario.
-
-Opcional: `GITHUB_BASE_BRANCH` (rama base, `main` por defecto). `GITHUB_API_URL` y `GITHUB_GIT_URL`
-solo sirven para pruebas. `npm run smoke` y los `projects/*/check.ts` trabajan siempre en local,
-aunque `.env` tenga token.
+**Repetir la demo tras fusionar el arreglo:** `main` ya lleva el arreglo en `terminal-pagos/`, así que
+el siguiente PR no tendría nada que cambiar. Pulsa **Revert** en ese PR en GitHub.
 
 ## Estructura
 
