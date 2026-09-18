@@ -1,0 +1,15 @@
+id: avisos-de-caducidad
+name: Avisos de caducidad
+description: Revisa el stock de productos frescos de una tienda en el ERP, detecta los lotes que caducan en las próximas 24 horas y propone un aviso al encargado para ponerlos en oferta o retirarlos.
+version: 1
+project: avisos_de_caducidad
+tier: fast
+effort: low
+max_turns: 8
+budget:
+  tokens_per_case: 40000
+  usd_per_case: 0.30
+tools:
+  - avisos_de_caducidad_consultar_stock_fresco
+  - avisos_de_caducidad_avisar_al_encargado
+owner: Operaciones

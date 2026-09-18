@@ -93,6 +93,13 @@ actions:
   - action: plataforma_merge_pr
     level: approve
 
+  # ── Avisos de caducidad (agente creador) ──────────────────────
+  - action: avisos_de_caducidad_consultar_stock_fresco
+    level: auto
+  - action: avisos_de_caducidad_avisar_al_encargado
+    level: approve
+
+
 
 overrides:
   # Pan de Pueblo pidió aprobar cualquier reinicio en sus tiendas.
