@@ -8,7 +8,7 @@
       "tienda": "fb-gracia",
       "estado": "issued",
       "comprobacion": "total_descuadrado",
-      "detalle": "total declarado 224.00 €, calculado 242.00 €.",
+      "detalle": "total 224.00 € frente a subtotal + IVA 242.00 €.",
       "impactoEur": 18.0
     },
     {
@@ -19,7 +19,7 @@
       "tienda": "hr-campanar",
       "estado": "issued",
       "comprobacion": "precio_contrato",
-      "detalle": "HW-DAT: tarifa facturada 329 € × 2; tarifa pactada 289 € por unidad. Diferencia con IVA: 96.80 €.",
+      "detalle": "HW-DAT: precio unitario 329 €; tarifa pactada 289 €; diferencia 40.00 €/unidad × 2 unidades.",
       "impactoEur": 96.8
     },
     {
@@ -30,7 +30,7 @@
       "tienda": "hr-patraix",
       "estado": "draft",
       "comprobacion": "iva_catalogo",
-      "detalle": "FOR-HOR: IVA facturado 10 %; corresponde 21 % según catálogo. Diferencia de IVA: 39.60 €.",
+      "detalle": "FOR-HOR: IVA aplicado 10 %; IVA de catálogo 21 %.",
       "impactoEur": 39.6
     },
     {
@@ -41,7 +41,7 @@
       "tienda": "pp-mostoles",
       "estado": "draft",
       "comprobacion": "linea_duplicada",
-      "detalle": "La línea PAP-TER con cantidad 4 y precio unitario 31.5 € aparece más de una vez.",
+      "detalle": "PAP-TER: referencia, cantidad 4 y precio 31.5 € repetidos.",
       "impactoEur": 152.46
     },
     {
@@ -52,18 +52,18 @@
       "tienda": "fb-sants",
       "estado": "draft",
       "comprobacion": "servicio_no_facturado",
-      "detalle": "Falta el servicio activo CON-4G para fb-sants; cuota pactada 13 € más IVA (15.73 €).",
+      "detalle": "Faltan servicios activos para fb-sants: CON-4G.",
       "impactoEur": 15.73
     }
   ],
   "dudosas": [
     {
       "factura": "FV-2026-0418",
-      "porQue": "Incluye un descuento; el contrato exige acuerdo firmado y las notas solo refieren un acuerdo telefónico, supuesto que requiere criterio humano."
+      "porQue": "Incluye un descuento del 20 % sin acuerdo escrito firmado; la nota solo refiere un acuerdo telefónico."
     },
     {
       "factura": "BORR-2609-03",
-      "porQue": "La descripción indica revisión de horno y cámara de fermentación, maquinaria de obrador excluida del alcance contractual; requiere criterio humano."
+      "porQue": "La descripción indica revisión de horno y cámara de fermentación, maquinaria de obrador excluida del objeto contractual."
     }
   ]
 }

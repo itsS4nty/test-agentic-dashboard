@@ -17,33 +17,43 @@ Detector  ──avisa──▶  Analista  ──avisa──▶  Redactor
 - **Analista.** Confirma o descarta cada hallazgo citando el contrato, resuelve las dudosas y aplica
   la regla de negocio: una factura ya emitida no se corrige sola, se propone rectificativa.
 - **Redactor.** Escribe un aviso por cliente, pero solo después de que una persona apruebe.
+- **Coordinador.** Un cuarto agente que reparte el trabajo, espera a cada uno, te pregunta y cierra.
+  Es lo que evita tener que escribir un programa: la coordinación también son instrucciones.
 
 Los datos son los de la demo anterior: 30 facturas de septiembre de 2026 de tres clientes, con
 errores sembrados a propósito, y sus contratos y catálogo.
 
-## Cómo se lanza
+## Cómo se lanza (sin escribir código)
 
-Hace falta Orca (`brew install --cask stablyai/orca/orca`) y Codex con sesión iniciada
-(`npm install -g @openai/codex` y `codex login`).
+Los cuatro agentes son ficheros de texto en `agentes/`. No hay programa que mantener.
+
+En Orca, abre una pestaña de agente con Codex y pégale el contenido de
+`agentes/00-coordinador.md`. Ya está: ese agente crea la ejecución, encadena las tres tareas, pone la
+puerta de decisión, lanza a cada agente cuando toca, **te pregunta a ti** antes de redactar los
+avisos y cierra al terminar. Tú solo contestas `aprobar`, `solo borradores` o `cancelar`.
+
+Desde la terminal es un comando, si prefieres no tocar la ventana:
 
 ```bash
-./orca-facturacion/lanzar.sh
+codex "$(cat orca-facturacion/agentes/00-coordinador.md)"
 ```
 
-Usa la orquestación de Orca: crea una ejecución, tres tareas encadenadas por dependencias y una
-**puerta de decisión** que bloquea al Redactor. Cuando el Analista termina, el guion muestra su
-dictamen y pregunta si se redactan los avisos (`aprobar`, `solo borradores`, `cancelar`), resuelve la
-puerta y arranca al Redactor. Para probarlo sin nadie delante, `RESPUESTA_AUTO="aprobar"`.
-
-Cada agente aparece en Orca como trabajador supervisado y avisa al terminar. Tarda unos diez minutos.
+Hace falta Orca (`brew install --cask stablyai/orca/orca`) y Codex con sesión iniciada
+(`npm install -g @openai/codex` y `codex login`). Tarda unos diez minutos.
 
 **Un ajuste obligatorio:** en Orca, Ajustes → Agentes, Codex tiene que llevar
 `--dangerously-bypass-approvals-and-sandbox`. Dentro de su cajón de arena, Codex no alcanza a Orca
 (comprobado: `runtimeReachable: false`) y no puede avisar de que ha terminado. Es la razón por la que
 Orca trae ese modo activado de fábrica. Asúmelo solo en una máquina dedicada y con accesos acotados.
 
-**Respaldo con Claude:** `./orca-facturacion/lanzar-claude.sh`. Con Claude, el lanzador supervisado de
-Orca no arranca (ver abajo), así que ese guion coordina por fuera y la aprobación va por fichero.
+### Variantes con guion, si las quieres
+
+No hacen falta para la demo; sirven para lanzarla sola, por ejemplo desde una tarea programada.
+
+- `./orca-facturacion/lanzar.sh`: hace de coordinador desde la terminal, con la misma orquestación.
+  Con `RESPUESTA_AUTO="aprobar"` se ejecuta entera sin nadie delante.
+- `./orca-facturacion/lanzar-claude.sh`: respaldo con Claude, porque con Claude el lanzador
+  supervisado de Orca no arranca (ver abajo). Coordina por fuera y la aprobación va por fichero.
 
 ## Qué queda en `salida/`
 
@@ -51,7 +61,7 @@ Orca no arranca (ver abajo), así que ese guion coordina por fuera y la aprobaci
 |---|---|
 | `1-hallazgos.json` y `.md` | Detector |
 | `2-dictamen.json` y `.md` | Analista |
-| `buzon/aprobacion.txt` | La persona, desde el coordinador |
+| `buzon/aprobacion.txt` | El coordinador, con la decisión de la persona |
 | `3-avisos/<cliente>.md` y `3-resumen-interno.md` | Redactor |
 
 En el repositorio están los de una ejecución real del 23/09/2026, como ejemplo.

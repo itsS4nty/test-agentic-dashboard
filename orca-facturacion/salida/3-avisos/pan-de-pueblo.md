@@ -1,6 +1,6 @@
-Hemos detectado incidencias en dos borradores:
+Asunto: Revisión de los borradores BORR-2609-02 y BORR-2609-03
 
-- BORR-2609-02: la línea PAP-TER (4 unidades a 31,50 €) aparece duplicada. Una línea suma 152,46 € con IVA.
-- BORR-2609-03: se incluyen dos visitas de revisión de horno y cámara, maquinaria excluida del alcance contractual. Su importe es 145,20 € con IVA. La visita de sustitución del lector de códigos no forma parte de esta incidencia.
+Hemos detectado dos incidencias en borradores:
 
-Se propone corregir ambos borradores: eliminar una de las líneas duplicadas en BORR-2609-02 y ajustar BORR-2609-03 para excluir las visitas de revisión señaladas.
+- En BORR-2609-02, la referencia PAP-TER aparece duplicada con cantidad 4 y precio unitario de 31,50 €. La línea duplicada supone 126,00 € de base (152,46 € con IVA). Se propone eliminar la línea duplicada.
+- En BORR-2609-03 se incluyen dos visitas para revisar un horno de convección y una cámara de fermentación, maquinaria excluida expresamente del contrato. El importe es 120,00 € de base (145,20 € con IVA). Se propone retirar esa línea del borrador.
