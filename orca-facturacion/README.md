@@ -59,6 +59,14 @@ avisan de verdad. Todo con la suscripción de Claude que ya tienes, sin pagar po
   que el agente está listo: el agente arranca bien, pero Orca no lo detecta y da tiempo de espera
   agotado. Por eso aquí las pestañas se crean con `terminal create` y el trabajo se manda con
   `terminal send`.
+  **Es un fallo suyo con Claude, no del modelo**: Orca espera a que la pantalla del agente quede
+  quieta (`tui-idle`) y con Claude recién arrancado eso no llega nunca (comprobado: con Claude ya
+  arrancado, la misma espera se cumple en 2 segundos). En su repositorio está abierto como
+  [#22040](https://github.com/stablyai/orca/issues/22040), con la comparación hecha: la misma tarea
+  con `--agent codex` arranca en medio minuto y con `--agent claude` se queda siete minutos sin
+  hacer nada. Codex, Cursor y Copilot están pre-confiados en su código; Claude no
+  ([#21867](https://github.com/stablyai/orca/issues/21867)). Con Codex es previsible que sí funcione,
+  y entonces se podrían usar sus tareas supervisadas y sus puertas de decisión.
 - `orca orchestration ask` (pregunta bloqueante) exige una tarea supervisada, así que tampoco sirve.
   La aprobación va por fichero, que además se lee mejor en la demo.
 - Las respuestas a una pregunta no vuelven a la bandeja del agente que la hizo.
