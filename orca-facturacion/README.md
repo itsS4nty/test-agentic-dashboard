@@ -23,18 +23,27 @@ errores sembrados a propósito, y sus contratos y catálogo.
 
 ## Cómo se lanza
 
-Hace falta Orca instalado (`brew install --cask stablyai/orca/orca`) y Claude Code con sesión
-iniciada.
+Hace falta Orca (`brew install --cask stablyai/orca/orca`) y Codex con sesión iniciada
+(`npm install -g @openai/codex` y `codex login`).
 
 ```bash
 ./orca-facturacion/lanzar.sh
 ```
 
-Abre cuatro pestañas en Orca —el coordinador y un agente por paso— y va contando lo que pasa. Cuando
-el Analista termina, muestra su dictamen y pregunta en la terminal si se redactan los avisos:
-`aprobar`, `solo borradores` o `cancelar`. Para probarlo sin nadie delante, `RESPUESTA_AUTO="aprobar"`.
+Usa la orquestación de Orca: crea una ejecución, tres tareas encadenadas por dependencias y una
+**puerta de decisión** que bloquea al Redactor. Cuando el Analista termina, el guion muestra su
+dictamen y pregunta si se redactan los avisos (`aprobar`, `solo borradores`, `cancelar`), resuelve la
+puerta y arranca al Redactor. Para probarlo sin nadie delante, `RESPUESTA_AUTO="aprobar"`.
 
-Tarda unos diez minutos con Claude real y cuesta unos pocos céntimos por agente.
+Cada agente aparece en Orca como trabajador supervisado y avisa al terminar. Tarda unos diez minutos.
+
+**Un ajuste obligatorio:** en Orca, Ajustes → Agentes, Codex tiene que llevar
+`--dangerously-bypass-approvals-and-sandbox`. Dentro de su cajón de arena, Codex no alcanza a Orca
+(comprobado: `runtimeReachable: false`) y no puede avisar de que ha terminado. Es la razón por la que
+Orca trae ese modo activado de fábrica. Asúmelo solo en una máquina dedicada y con accesos acotados.
+
+**Respaldo con Claude:** `./orca-facturacion/lanzar-claude.sh`. Con Claude, el lanzador supervisado de
+Orca no arranca (ver abajo), así que ese guion coordina por fuera y la aprobación va por fichero.
 
 ## Qué queda en `salida/`
 
@@ -49,9 +58,9 @@ En el repositorio están los de una ejecución real del 23/09/2026, como ejemplo
 
 ## Qué hace Orca aquí y qué no
 
-**Lo que aporta:** cada agente en su pestaña, visibles a la vez; una línea de comandos para crearlas
-y gobernarlas; y una mensajería entre agentes (`orca orchestration send` / `check`) por la que se
-avisan de verdad. Todo con la suscripción de Claude que ya tienes, sin pagar por tokens aparte.
+**Lo que aporta:** cada agente en su pestaña, visibles a la vez; tareas con dependencias, puertas de
+decisión para las aprobaciones y mensajería entre agentes; y una línea de comandos con la que se
+gobierna todo. Con la suscripción que ya tengas (Codex o Claude), sin pagar tokens aparte.
 
 **Lo que no funcionó** (Orca 1.4.209 con Claude Code 2.1.177, 23/09/2026):
 
@@ -74,5 +83,10 @@ avisan de verdad. Todo con la suscripción de Claude que ya tienes, sin pagar po
   pedir permiso para nada. Conviene desmarcarlo; los permisos de esta demo están acotados en
   `.claude/settings.local.json`.
 
-En resumen: Orca vale hoy como sitio donde ver y manejar varios agentes; la coordinación fiable la
-pone el guion (`lanzar.sh`), que son cincuenta líneas de shell.
+**Con Codex sí funciona** (probado el 23/09/2026 con Codex CLI 0.156.1): `worker-start` arranca el
+agente (`ready` / `input_accepted`), le entrega la tarea y recibe su `worker_done`. Por eso la demo
+principal va con Codex y usa tareas encadenadas y puertas de decisión de verdad.
+
+En resumen: con Codex, Orca sirve como orquestador pequeño, siempre que aceptes que sus agentes
+corran sin cajón de arena. Con Claude, hoy solo sirve como sitio donde ver y manejar los agentes, y
+la coordinación la pone el guion de respaldo.

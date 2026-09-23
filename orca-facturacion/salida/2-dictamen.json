@@ -2,89 +2,75 @@
   "dictamen": [
     {
       "id": "H-01",
-      "factura": "FV-2026-0417",
-      "facturaId": "fac-06",
-      "cliente": "horno-real",
-      "tienda": "hr-campanar",
+      "factura": "FV-2026-0414",
       "veredicto": "confirmado",
-      "motivo": "HW-DAT facturado a 329 €/ud. El contrato CT-HR-2024-017 (cláusula de tarifas) fija el precio de HW-DAT en 289 €/ud. Exceso unitario: 40 €; qty 2 → sobrecobro en base 80 €, con IVA 21 %: 96,80 €. El cliente ha sido cobrado en exceso.",
+      "motivo": "El subtotal correcto es 200,00 € y el IVA 42,00 €, por lo que el total debería ser 242,00 €; la factura declara 224,00 €. Reglas de facturación: total_descuadrado (subtotal + vatTotal = total).",
       "accion": "proponer_rectificativa",
       "estado": "escalado",
-      "impactoEur": 96.80
+      "impactoEur": 18.0,
+      "cliente": "forn-del-barri"
     },
     {
       "id": "H-02",
-      "factura": "FV-2026-0414",
-      "facturaId": "fac-03",
-      "cliente": "forn-del-barri",
-      "tienda": "fb-gracia",
+      "factura": "FV-2026-0417",
       "veredicto": "confirmado",
-      "motivo": "Error aritmético en el total de la factura. Líneas: PAP-TER 5×34=170 + ETQ-ALE 2×15=30 → subtotal 200 €; vatTotal 200×21%=42 €; total correcto 242 €. La factura declara total 224 €, una diferencia de 18 € a favor del cliente. HitSystems ha facturado 18 € menos de lo que corresponde.",
+      "motivo": "El contrato CT-HR-2024-017 fija HW-DAT a 289 € por unidad; se facturaron 329 € × 2. La diferencia de base es 80 € y con IVA del catálogo (21 %) asciende a 96,80 €.",
       "accion": "proponer_rectificativa",
       "estado": "escalado",
-      "impactoEur": 18.00
+      "impactoEur": 96.8,
+      "cliente": "horno-real"
     },
     {
       "id": "H-03",
       "factura": "BORR-2609-01",
-      "facturaId": "fac-16",
-      "cliente": "horno-real",
-      "tienda": "hr-patraix",
       "veredicto": "confirmado",
-      "motivo": "FOR-HOR (Formación presencial) pertenece a la categoría 'formacion' del catálogo de productos, que establece vatRate 21 %. La línea aplica vatRate 10 %, infracturando IVA. Base 360 €; diferencia de IVA: 360×(0,21−0,10)=39,60 €. El borrador debe corregirse antes de emitir.",
+      "motivo": "FOR-HOR pertenece a la categoría formación, cuyo IVA en el catálogo es 21 %; el borrador aplica 10 % sobre 360 €, con una diferencia de IVA de 39,60 €.",
       "accion": "proponer_correccion",
       "estado": "pendiente_aprobacion",
-      "impactoEur": 39.60
+      "impactoEur": 39.6,
+      "cliente": "horno-real"
     },
     {
       "id": "H-04",
       "factura": "BORR-2609-02",
-      "facturaId": "fac-17",
-      "cliente": "pan-de-pueblo",
-      "tienda": "pp-mostoles",
       "veredicto": "confirmado",
-      "motivo": "La referencia PAP-TER (qty 4, unitPrice 31,50, total 126) aparece dos veces con idénticos SKU, cantidad y precio unitario. Se trata de una línea duplicada que sobrecarga al cliente. Base duplicada: 126 €; IVA 21 %: 26,46 €; total con IVA: 152,46 €.",
+      "motivo": "PAP-TER aparece dos veces con la misma cantidad (4) y precio unitario (31,50 €), incumpliendo la comprobación linea_duplicada. Una de las líneas repetidas suma 126 € de base más 21 % de IVA: 152,46 €.",
       "accion": "proponer_correccion",
       "estado": "pendiente_aprobacion",
-      "impactoEur": 152.46
+      "impactoEur": 152.46,
+      "cliente": "pan-de-pueblo"
     },
     {
       "id": "H-05",
       "factura": "BORR-2609-11",
-      "facturaId": "fac-26",
-      "cliente": "forn-del-barri",
-      "tienda": "fb-sants",
       "veredicto": "confirmado",
-      "motivo": "CON-4G (Conectividad 4G de respaldo) figura como servicio activo para fb-sants en el contrato CT-FB-2025-004 (activeServices). La cuota mensual de septiembre 2026 de fb-sants no incluye esta línea. Tarifa contractual 13 €/mes; con IVA 21 %: 15,73 €. Ingreso omitido en el borrador.",
+      "motivo": "El contrato CT-FB-2025-004 incluye CON-4G entre los servicios activos para fb-sants y fija su tarifa en 13 €; el borrador no incluye esa cuota. Con IVA del catálogo (21 %), son 15,73 €.",
       "accion": "proponer_correccion",
       "estado": "pendiente_aprobacion",
-      "impactoEur": 15.73
+      "impactoEur": 15.73,
+      "cliente": "forn-del-barri"
     },
     {
       "id": "H-06",
       "factura": "FV-2026-0418",
-      "facturaId": "fac-07",
-      "cliente": "forn-del-barri",
-      "tienda": "fb-poblenou",
       "veredicto": "confirmado",
-      "motivo": "Descuento del 20 % (−179,40 € base, −37,67 € IVA, total −217,07 €) aplicado sin respaldo documental. La nota de la factura indica: 'se acordó por teléfono con gerencia; no consta por escrito.' El contrato CT-FB-2025-004 (discountPolicy) exige acuerdo por escrito firmado por ambas partes para cualquier descuento o bonificación. Una comunicación telefónica no cumple este requisito. Hallazgo promovido desde dudosas del Detector.",
+      "motivo": "El contrato CT-FB-2025-004 establece que cualquier descuento requiere acuerdo por escrito firmado por ambas partes. La nota solo refiere un acuerdo telefónico y dice que no consta por escrito; el descuento de 179,40 € de base representa 217,07 € con IVA del 21 %.",
       "accion": "proponer_rectificativa",
       "estado": "escalado",
-      "impactoEur": 217.07
+      "impactoEur": 217.07,
+      "cliente": "forn-del-barri"
     },
     {
       "id": "H-07",
       "factura": "BORR-2609-03",
-      "facturaId": "fac-18",
-      "cliente": "pan-de-pueblo",
-      "tienda": "pp-alcala",
       "veredicto": "confirmado",
-      "motivo": "Segunda línea de VIS-TEC describe 'Revisión de horno de convección y cámara de fermentación (2 visitas)'. El contrato CT-PP-2025-011 (serviceScope) excluye expresamente 'maquinaria de obrador (hornos, cámaras, amasadoras)'. Aunque el SKU y el precio son correctos, el trabajo descrito queda fuera del ámbito contractual. El borrador debe corregirse o la línea debe ampararse en un pedido adicional aceptado por escrito. Base: 2×60=120 €; IVA 21 %: 25,20 €; total con IVA: 145,20 €. Hallazgo promovido desde dudosas del Detector.",
+      "motivo": "El contrato CT-PP-2025-011 excluye expresamente la maquinaria de obrador, incluidos hornos y cámaras. Las dos visitas de revisión de esa maquinaria no encajan con el alcance pactado; su importe es 120 € de base más 21 % de IVA, 145,20 €. La visita de sustitución del lector de códigos no forma parte de este hallazgo.",
       "accion": "proponer_correccion",
       "estado": "pendiente_aprobacion",
-      "impactoEur": 145.20
+      "impactoEur": 145.2,
+      "cliente": "pan-de-pueblo"
     }
   ],
   "totalEur": 684.86,
-  "notas": "Todos los hallazgos quedan confirmados; ninguno descartado ni marcado como requiere_criterio. Las dos dudosas del Detector se han convertido en hallazgos confirmados (H-06 y H-07) con apoyo contractual explícito. H-01 y H-02 son sobrecobros/errores en facturas emitidas a favor opuesto: H-01 perjudica al cliente (cobro excesivo 96,80 €); H-02 perjudica a HitSystems (cobro insuficiente 18 €). Ambas requieren rectificativa. H-06 también es factura emitida con descuento sin cobertura contractual (217,07 €). Los tres casos escalados suponen 331,87 € y requieren intervención de administración. Los cuatro borradores (H-03, H-04, H-05, H-07) suman 352,99 € y se pueden corregir antes de emitir."
+  "notas": "Las dos dudas del Detector se incorporan como H-06 y H-07: el descuento carece del acuerdo escrito firmado requerido por contrato y la revisión de horno/cámara está excluida del alcance. Se cuentan importes con IVA incluido; para H-01, los 18,00 € son la diferencia entre el total declarado y el calculado. Aplicada la regla de negocio: facturas emitidas escaladas con propuesta rectificativa; borradores con propuesta de corrección pendiente de aprobación."
 }

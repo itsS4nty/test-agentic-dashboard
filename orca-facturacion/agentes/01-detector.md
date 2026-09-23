@@ -20,16 +20,5 @@ Reglas de trabajo:
 - Si un dato falta o es contradictorio, dilo en el resumen en vez de suponerlo.
 - No toques ningún fichero fuera de `orca-facturacion/salida/`.
 
-## Cómo avisas al siguiente agente
-
-Cuando tengas los dos ficheros escritos, avisa al Analista y al coordinador con la mensajería de Orca:
-
-```
-orca orchestration send --from {{YO}} --to {{SIGUIENTE}} --run {{RUN}} \
-  --subject "Hallazgos listos" --body "<n> hallazgos, <importe> € de impacto, <m> dudosas. En salida/1-hallazgos.json"
-orca orchestration send --from {{YO}} --to run:{{RUN}} --run {{RUN}} \
-  --subject "Detector terminado" --body "<resumen de tres frases: cuántos hallazgos, impacto total y cuántas dudosas>"
-```
-
-Ejecuta esos comandos de verdad con tu herramienta de shell; no los imprimas como texto. Si no se
-ejecutan, el coordinador no se entera de que has terminado y la cadena se para. Después, termina.
+Al terminar, envía `worker_done` tal y como te indica tu preámbulo, con un resumen de tres frases:
+cuántos hallazgos has encontrado, el impacto total y cuántas facturas dejas como dudosas. Ejecuta ese comando de verdad; no lo imprimas como texto.

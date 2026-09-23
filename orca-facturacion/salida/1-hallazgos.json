@@ -2,25 +2,25 @@
   "hallazgos": [
     {
       "id": "H-01",
-      "factura": "FV-2026-0417",
-      "facturaId": "fac-06",
-      "cliente": "horno-real",
-      "tienda": "hr-campanar",
-      "estado": "issued",
-      "comprobacion": "precio_contrato",
-      "detalle": "HW-DAT facturado a 329 €/ud; tarifa pactada en contrato CT-HR-2024-017: 289 €/ud. Qty 2. Cobro excesivo sobre base imponible: 40 × 2 = 80 €; con IVA 21 %: 96,80 €.",
-      "impactoEur": 96.80
-    },
-    {
-      "id": "H-02",
       "factura": "FV-2026-0414",
       "facturaId": "fac-03",
       "cliente": "forn-del-barri",
       "tienda": "fb-gracia",
       "estado": "issued",
       "comprobacion": "total_descuadrado",
-      "detalle": "subtotal 200 + vatTotal 42 = 242; total declarado 224. Diferencia: 18 €. La factura cobra 18 € menos de lo que las propias líneas suman.",
-      "impactoEur": 18.00
+      "detalle": "total declarado 224.00 €, calculado 242.00 €.",
+      "impactoEur": 18.0
+    },
+    {
+      "id": "H-02",
+      "factura": "FV-2026-0417",
+      "facturaId": "fac-06",
+      "cliente": "horno-real",
+      "tienda": "hr-campanar",
+      "estado": "issued",
+      "comprobacion": "precio_contrato",
+      "detalle": "HW-DAT: tarifa facturada 329 € × 2; tarifa pactada 289 € por unidad. Diferencia con IVA: 96.80 €.",
+      "impactoEur": 96.8
     },
     {
       "id": "H-03",
@@ -30,8 +30,8 @@
       "tienda": "hr-patraix",
       "estado": "draft",
       "comprobacion": "iva_catalogo",
-      "detalle": "FOR-HOR pertenece a la categoría 'formacion' del catálogo, que fija IVA 21 %. La línea aplica vatRate 10 %. Base 360 €; diferencia de IVA: 360 × (0,21 − 0,10) = 39,60 €.",
-      "impactoEur": 39.60
+      "detalle": "FOR-HOR: IVA facturado 10 %; corresponde 21 % según catálogo. Diferencia de IVA: 39.60 €.",
+      "impactoEur": 39.6
     },
     {
       "id": "H-04",
@@ -41,7 +41,7 @@
       "tienda": "pp-mostoles",
       "estado": "draft",
       "comprobacion": "linea_duplicada",
-      "detalle": "PAP-TER (qty 4, unitPrice 31,50, total 126) aparece dos veces con idénticos referencia, cantidad y precio. La línea duplicada suma 126 € en base + 26,46 € de IVA = 152,46 €.",
+      "detalle": "La línea PAP-TER con cantidad 4 y precio unitario 31.5 € aparece más de una vez.",
       "impactoEur": 152.46
     },
     {
@@ -52,20 +52,18 @@
       "tienda": "fb-sants",
       "estado": "draft",
       "comprobacion": "servicio_no_facturado",
-      "detalle": "CON-4G figura como servicio activo para fb-sants en el contrato CT-FB-2025-004 pero no aparece en la cuota mensual. Tarifa contractual 13 €; con IVA 21 %: 15,73 €.",
+      "detalle": "Falta el servicio activo CON-4G para fb-sants; cuota pactada 13 € más IVA (15.73 €).",
       "impactoEur": 15.73
     }
   ],
   "dudosas": [
     {
       "factura": "FV-2026-0418",
-      "facturaId": "fac-07",
-      "porQue": "Descuento del 20 % (línea DTO −179,40 €) respaldado únicamente por nota en texto libre: 'se acordó por teléfono con gerencia; no consta por escrito.' El contrato CT-FB-2025-004 exige acuerdo por escrito firmado por ambas partes para cualquier descuento. No es un incumplimiento determinista de precio ni de IVA, pero tampoco tiene respaldo documental."
+      "porQue": "Incluye un descuento; el contrato exige acuerdo firmado y las notas solo refieren un acuerdo telefónico, supuesto que requiere criterio humano."
     },
     {
       "factura": "BORR-2609-03",
-      "facturaId": "fac-18",
-      "porQue": "La segunda línea de VIS-TEC describe 'Revisión de horno de convección y cámara de fermentación (2 visitas)'. El contrato CT-PP-2025-011 excluye expresamente 'maquinaria de obrador (hornos, cámaras, amasadoras)'. El SKU, precio e IVA son correctos, pero el concepto no encaja con el ámbito del contrato."
+      "porQue": "La descripción indica revisión de horno y cámara de fermentación, maquinaria de obrador excluida del alcance contractual; requiere criterio humano."
     }
   ]
 }

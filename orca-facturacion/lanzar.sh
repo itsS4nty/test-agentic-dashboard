@@ -1,21 +1,25 @@
 #!/usr/bin/env bash
 #
-# Lanza los tres agentes de facturación en Orca y hace de coordinador.
+# Los tres agentes de facturación con la orquestación de Orca (Codex).
 #
 #   ./orca-facturacion/lanzar.sh
 #
-# Abre cuatro pestañas en Orca: el coordinador y un agente por paso. Cada agente avisa al siguiente
-# y al coordinador con la mensajería de Orca (`orca orchestration send` / `check`); el coordinador
-# arranca al siguiente en cuanto llega ese aviso. El Redactor pide aprobación antes de escribir los
-# avisos y esa pregunta se contesta aquí, en esta terminal.
-# Con RESPUESTA_AUTO="aprobar" se contesta sola (útil para probar sin nadie delante).
+# Crea una ejecución, tres tareas encadenadas por dependencias y una puerta de decisión que bloquea
+# la última: sin el visto bueno de una persona no se redacta ningún aviso. Cada agente arranca como
+# trabajador supervisado de Orca, recibe su tarea y avisa al terminar (`worker_done`).
+#
+# Requisitos: Codex instalado y con sesión iniciada (`codex login`), y en Orca, Ajustes → Agentes,
+# el argumento de Codex «--dangerously-bypass-approvals-and-sandbox». Sin eso el agente no puede
+# contestar a Orca desde dentro de su cajón de arena.
+#
+# Con RESPUESTA_AUTO="aprobar" la decisión se toma sola (útil para probar sin nadie delante).
 set -euo pipefail
 
 ORCA=${ORCA:-orca}
+AGENTE=${AGENTE:-codex}
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TRABAJO="${TMPDIR:-/tmp}/orca-facturacion"
 cd "$ROOT"
-mkdir -p "$TRABAJO" orca-facturacion/salida/3-avisos
+mkdir -p orca-facturacion/salida/3-avisos orca-facturacion/salida/buzon
 
 # Orca mezcla líneas de log de Electron con el JSON: nos quedamos desde la primera llave.
 json() { python3 -c "
@@ -31,32 +35,39 @@ COORD=$("$ORCA" terminal create --worktree current --title "Coordinador" --json 
 RUN=$("$ORCA" orchestration run-create \
   --objective "Revisión de las facturas de septiembre de 2026" \
   --from "$COORD" --json | json "d['result']['run']['id']")
-echo "· Ejecución $RUN · coordinador $COORD"
+echo "· Ejecución $RUN"
 
-H1=$("$ORCA" terminal create --worktree current --title "1 · Detector" --json | json "d['result']['terminal']['handle']")
-H2=$("$ORCA" terminal create --worktree current --title "2 · Analista" --json | json "d['result']['terminal']['handle']")
-H3=$("$ORCA" terminal create --worktree current --title "3 · Redactor" --json | json "d['result']['terminal']['handle']")
-echo "· Agentes: detector $H1 · analista $H2 · redactor $H3"
-
-# Cada agente recibe su prompt con los identificadores ya sustituidos.
-preparar() { # <fichero> <yo> <siguiente> <destino>
-  sed -e "s|{{RUN}}|$RUN|g" -e "s|{{YO}}|$2|g" -e "s|{{SIGUIENTE}}|$3|g" -e "s|{{COORD}}|$COORD|g" "$1" > "$4"
+tarea() { # <fichero de instrucciones> <título> [deps json]
+  if [ -n "${3:-}" ]; then
+    "$ORCA" orchestration task-create --spec "$(cat "$1")" --task-title "$2" --display-name "$2" \
+      --deps "$3" --from "$COORD" --run "$RUN" --json | json "d['result']['task']['id']"
+  else
+    "$ORCA" orchestration task-create --spec "$(cat "$1")" --task-title "$2" --display-name "$2" \
+      --from "$COORD" --run "$RUN" --json | json "d['result']['task']['id']"
+  fi
 }
-preparar orca-facturacion/agentes/01-detector.md "$H1" "$H2" "$TRABAJO/1.txt"
-preparar orca-facturacion/agentes/02-analista.md "$H2" "$H3" "$TRABAJO/2.txt"
-preparar orca-facturacion/agentes/03-redactor.md "$H3" "$COORD" "$TRABAJO/3.txt"
+T1=$(tarea orca-facturacion/agentes/01-detector.md "1 · Detector")
+T2=$(tarea orca-facturacion/agentes/02-analista.md "2 · Analista" "[\"$T1\"]")
+T3=$(tarea orca-facturacion/agentes/03-redactor.md "3 · Redactor" "[\"$T2\"]")
+echo "· Tareas: $T1 → $T2 → $T3"
 
-arrancar() { # <handle> <fichero de prompt>
-  "$ORCA" terminal send --terminal "$1" --text "claude -p \"\$(cat $2)\" --output-format text" --enter >/dev/null
+# La puerta de decisión bloquea al Redactor hasta que una persona resuelve.
+PUERTA=$("$ORCA" orchestration gate-create --task "$T3" \
+  --question "¿Se redactan los avisos a los clientes?" \
+  --options '["aprobar","solo borradores","cancelar"]' \
+  --from "$COORD" --json | json "d['result']['gate']['id']")
+echo "· Puerta de decisión $PUERTA sobre la tarea del Redactor"
+
+arrancar() { # <task_id>
+  "$ORCA" orchestration worker-start --task "$1" --worktree current --agent "$AGENTE" \
+    --timeout-ms 180000 --from "$COORD" --run "$RUN" --json | json "d['result']['state']"
 }
-
-echo "· Arranca el Detector. Míralo en Orca."
-arrancar "$H1" "$TRABAJO/1.txt"
+echo "· Arranca el Detector ($(arrancar "$T1")). Míralo en Orca."
 echo
 
-# Coordinador: por cada aviso que llega, arranca al siguiente agente y contesta las preguntas.
 while true; do
-  LOTE=$("$ORCA" orchestration check --terminal "$COORD" --run "$RUN" --wait --timeout-ms 900000 --json 2>/dev/null || true)
+  LOTE=$("$ORCA" orchestration check --terminal "$COORD" --run "$RUN" --wait \
+    --types "worker_done,escalation,question" --timeout-ms 900000 --json 2>/dev/null || true)
   if [ -z "$LOTE" ] || ! echo "$LOTE" | grep -q '{'; then echo "· Sin mensajes. Fin."; break; fi
 
   echo "$LOTE" | python3 - <<'PY'
@@ -64,19 +75,20 @@ import json, sys
 t = sys.stdin.read(); i = t.find('{')
 d = json.loads(t[i:]) if i >= 0 else {}
 for m in (d.get('result') or {}).get('messages', []):
-    print(f"\n  [{(m.get('from_handle') or '')[:12]}… {m.get('type','mensaje')}] {m.get('subject','')}")
+    p = m.get('payload')
+    p = json.loads(p) if isinstance(p, str) else (p or {})
+    print(f"\n  [{m.get('type')} · {p.get('outcome', '')}] {m.get('subject', '')}")
     if m.get('body'):
         print("  " + m['body'].replace("\n", "\n  "))
 PY
 
-  ASUNTOS=$(echo "$LOTE" | json "' | '.join((m.get('subject') or '') for m in (d.get('result') or {}).get('messages', []))")
-  case "$ASUNTOS" in
-    *Detector*)
-      echo; echo "· Arranca el Analista."
-      arrancar "$H2" "$TRABAJO/2.txt"
+  TAREAS=$(echo "$LOTE" | json "' '.join((json.loads(m['payload']) if isinstance(m.get('payload'), str) else (m.get('payload') or {})).get('taskId','') for m in (d.get('result') or {}).get('messages', []))")
+
+  case "$TAREAS" in
+    *"$T1"*)
+      echo; echo "· Arranca el Analista ($(arrancar "$T2"))."
       ;;
-    *Analista*)
-      # Aquí decide una persona: sin su visto bueno no se redacta ningún aviso.
+    *"$T2"*)
       echo
       python3 - <<'PY'
 import json
@@ -88,22 +100,21 @@ for x in filas:
 PY
       echo
       if [ -n "${RESPUESTA_AUTO:-}" ]; then
-        DECISION="$RESPUESTA_AUTO"
-        echo "  Decisión automática: $DECISION"
+        DECISION="$RESPUESTA_AUTO"; echo "  Decisión automática: $DECISION"
       else
         read -r -p "  ¿Redactamos los avisos? (aprobar / solo borradores / cancelar): " DECISION
       fi
-      mkdir -p orca-facturacion/salida/buzon
-      printf '%s\n' "${DECISION:-aprobar}" > orca-facturacion/salida/buzon/aprobacion.txt
-      echo "· Decisión registrada: ${DECISION:-aprobar}. Arranca el Redactor."
-      arrancar "$H3" "$TRABAJO/3.txt"
+      DECISION="${DECISION:-aprobar}"
+      "$ORCA" orchestration gate-resolve --id "$PUERTA" --resolution "$DECISION" --from "$COORD" --json >/dev/null
+      printf '%s\n' "$DECISION" > orca-facturacion/salida/buzon/aprobacion.txt
+      echo "· Puerta resuelta: $DECISION. Arranca el Redactor ($(arrancar "$T3"))."
+      ;;
+    *"$T3"*)
+      echo; echo "· Listo. Resultados en orca-facturacion/salida/"
+      break
       ;;
   esac
 
   DELIVERY=$(echo "$LOTE" | json "(d.get('result') or {}).get('deliveryId','')")
   [ -n "${DELIVERY:-}" ] && "$ORCA" orchestration check --terminal "$COORD" --run "$RUN" --ack "$DELIVERY" --json >/dev/null 2>&1 || true
-
-  case "$ASUNTOS" in
-    *Redactor*) echo; echo "· Listo. Resultados en orca-facturacion/salida/"; break ;;
-  esac
 done
