@@ -3,7 +3,7 @@
 # Respaldo con Claude: los tres agentes sin la orquestación de Orca (que con Claude no arranca).
 # El coordinador es este guion y los agentes se avisan con mensajes de Orca.
 #
-#   ./orca-facturacion/lanzar.sh
+#   ./lanzar.sh
 #
 # Abre cuatro pestañas en Orca: el coordinador y un agente por paso. Cada agente avisa al siguiente
 # y al coordinador con la mensajería de Orca (`orca orchestration send` / `check`); el coordinador
@@ -13,10 +13,10 @@
 set -euo pipefail
 
 ORCA=${ORCA:-orca}
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRABAJO="${TMPDIR:-/tmp}/orca-facturacion"
 cd "$ROOT"
-mkdir -p "$TRABAJO" orca-facturacion/salida/3-avisos
+mkdir -p "$TRABAJO" salida/3-avisos
 
 # Orca mezcla líneas de log de Electron con el JSON: nos quedamos desde la primera llave.
 json() { python3 -c "
@@ -54,9 +54,9 @@ preparar() { # <fichero> <yo> <siguiente> <destino>
     echo "Ejecuta esos comandos de verdad con tu herramienta de shell; no los imprimas como texto."
   } > "$5"
 }
-preparar orca-facturacion/agentes/01-detector.md "$H1" "$H2" "Detector terminado" "$TRABAJO/1.txt"
-preparar orca-facturacion/agentes/02-analista.md "$H2" "$H3" "Analista terminado" "$TRABAJO/2.txt"
-preparar orca-facturacion/agentes/03-redactor.md "$H3" "run:$RUN" "Redactor terminado" "$TRABAJO/3.txt"
+preparar agentes/01-detector.md "$H1" "$H2" "Detector terminado" "$TRABAJO/1.txt"
+preparar agentes/02-analista.md "$H2" "$H3" "Analista terminado" "$TRABAJO/2.txt"
+preparar agentes/03-redactor.md "$H3" "run:$RUN" "Redactor terminado" "$TRABAJO/3.txt"
 
 arrancar() { # <handle> <fichero de prompt>
   "$ORCA" terminal send --terminal "$1" --text "claude -p \"\$(cat $2)\" --output-format text" --enter >/dev/null
@@ -92,7 +92,7 @@ PY
       echo
       python3 - <<'PY'
 import json
-d = json.load(open('orca-facturacion/salida/2-dictamen.json'))
+d = json.load(open('salida/2-dictamen.json'))
 filas = [x for x in d.get('dictamen', []) if x.get('veredicto') == 'confirmado']
 print(f"  Dictamen: {len(filas)} hallazgos confirmados, {d.get('totalEur')} € en juego")
 for x in filas:
@@ -105,8 +105,8 @@ PY
       else
         read -r -p "  ¿Redactamos los avisos? (aprobar / solo borradores / cancelar): " DECISION
       fi
-      mkdir -p orca-facturacion/salida/buzon
-      printf '%s\n' "${DECISION:-aprobar}" > orca-facturacion/salida/buzon/aprobacion.txt
+      mkdir -p salida/buzon
+      printf '%s\n' "${DECISION:-aprobar}" > salida/buzon/aprobacion.txt
       echo "· Decisión registrada: ${DECISION:-aprobar}. Arranca el Redactor."
       arrancar "$H3" "$TRABAJO/3.txt"
       ;;
@@ -116,6 +116,6 @@ PY
   [ -n "${DELIVERY:-}" ] && "$ORCA" orchestration check --terminal "$COORD" --run "$RUN" --ack "$DELIVERY" --json >/dev/null 2>&1 || true
 
   case "$ASUNTOS" in
-    *Redactor*) echo; echo "· Listo. Resultados en orca-facturacion/salida/"; break ;;
+    *Redactor*) echo; echo "· Listo. Resultados en salida/"; break ;;
   esac
 done

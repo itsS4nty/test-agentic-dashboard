@@ -2,7 +2,7 @@
 #
 # Los tres agentes de facturación con la orquestación de Orca (Codex).
 #
-#   ./orca-facturacion/lanzar.sh
+#   ./lanzar.sh
 #
 # Crea una ejecución, tres tareas encadenadas por dependencias y una puerta de decisión que bloquea
 # la última: sin el visto bueno de una persona no se redacta ningún aviso. Cada agente arranca como
@@ -17,9 +17,9 @@ set -euo pipefail
 
 ORCA=${ORCA:-orca}
 AGENTE=${AGENTE:-codex}
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
-mkdir -p orca-facturacion/salida/3-avisos orca-facturacion/salida/buzon
+mkdir -p salida/3-avisos salida/buzon
 
 # Orca mezcla líneas de log de Electron con el JSON: nos quedamos desde la primera llave.
 json() { python3 -c "
@@ -46,9 +46,9 @@ tarea() { # <fichero de instrucciones> <título> [deps json]
       --from "$COORD" --run "$RUN" --json | json "d['result']['task']['id']"
   fi
 }
-T1=$(tarea orca-facturacion/agentes/01-detector.md "1 · Detector")
-T2=$(tarea orca-facturacion/agentes/02-analista.md "2 · Analista" "[\"$T1\"]")
-T3=$(tarea orca-facturacion/agentes/03-redactor.md "3 · Redactor" "[\"$T2\"]")
+T1=$(tarea agentes/01-detector.md "1 · Detector")
+T2=$(tarea agentes/02-analista.md "2 · Analista" "[\"$T1\"]")
+T3=$(tarea agentes/03-redactor.md "3 · Redactor" "[\"$T2\"]")
 echo "· Tareas: $T1 → $T2 → $T3"
 
 # La puerta de decisión bloquea al Redactor hasta que una persona resuelve.
@@ -92,7 +92,7 @@ PY
       echo
       python3 - <<'PY'
 import json
-d = json.load(open('orca-facturacion/salida/2-dictamen.json'))
+d = json.load(open('salida/2-dictamen.json'))
 filas = [x for x in d.get('dictamen', []) if x.get('veredicto') == 'confirmado']
 print(f"  Dictamen: {len(filas)} hallazgos confirmados, {d.get('totalEur')} € en juego")
 for x in filas:
@@ -106,11 +106,11 @@ PY
       fi
       DECISION="${DECISION:-aprobar}"
       "$ORCA" orchestration gate-resolve --id "$PUERTA" --resolution "$DECISION" --from "$COORD" --json >/dev/null
-      printf '%s\n' "$DECISION" > orca-facturacion/salida/buzon/aprobacion.txt
+      printf '%s\n' "$DECISION" > salida/buzon/aprobacion.txt
       echo "· Puerta resuelta: $DECISION. Arranca el Redactor ($(arrancar "$T3"))."
       ;;
     *"$T3"*)
-      echo; echo "· Listo. Resultados en orca-facturacion/salida/"
+      echo; echo "· Listo. Resultados en salida/"
       break
       ;;
   esac

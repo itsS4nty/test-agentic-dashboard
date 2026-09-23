@@ -2,7 +2,7 @@
 # Coordinador de una ejecución ya en marcha:  RUN=run_x COORD=term_y ./coordinador.sh
 set -euo pipefail
 ORCA=${ORCA:-orca}
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${RUN:?falta RUN}" ; : "${COORD:?falta COORD}"
 # Orca mezcla líneas de log de Electron con el JSON: nos quedamos desde la primera llave.
 json() { python3 -c "
@@ -44,9 +44,9 @@ PY
   DELIVERY=$(echo "$LOTE" | json "(d.get('result') or {}).get('deliveryId','')" 2>/dev/null || true)
   [ -n "${DELIVERY:-}" ] && "$ORCA" orchestration check --terminal "$COORD" --run "$RUN" --ack "$DELIVERY" --json >/dev/null 2>&1 || true
 
-  if [ -f orca-facturacion/salida/3-resumen-interno.md ]; then
+  if [ -f salida/3-resumen-interno.md ]; then
     echo
-    echo "· Listo. Resultados en orca-facturacion/salida/"
+    echo "· Listo. Resultados en salida/"
     break
   fi
 done
