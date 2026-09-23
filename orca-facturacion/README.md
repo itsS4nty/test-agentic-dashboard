@@ -55,6 +55,39 @@ No hacen falta para la demo; sirven para lanzarla sola, por ejemplo desde una ta
 - `./orca-facturacion/lanzar-claude.sh`: respaldo con Claude, porque con Claude el lanzador
   supervisado de Orca no arranca (ver abajo). Coordina por fuera y la aprobación va por fichero.
 
+## Llevarlo a otra máquina
+
+Los ficheros no llevan ninguna ruta absoluta: el repositorio puede ir donde quieras. Pero copiar los
+ficheros no basta, porque los agentes no se ejecutan solos: hace falta el programa que los ejecuta y
+una sesión iniciada. En una máquina limpia son unos veinte minutos, una sola vez.
+
+| Paso | Cómo | ¿Hace falta una persona? |
+|---|---|---|
+| 1. Node 22 o superior | `brew install node` | No |
+| 2. Orca | `brew install --cask stablyai/orca/orca` | No |
+| 3. Abrir Orca la primera vez | Elegir Codex como agente por defecto | Sí, dos clics |
+| 4. Codex | `npm install -g @openai/codex` | No |
+| 5. Iniciar sesión en Codex | `codex login`, se abre el navegador | Sí, es su cuenta |
+| 6. Argumento de Codex en Orca | Ajustes → Agentes → Codex: `--dangerously-bypass-approvals-and-sandbox` | Sí, un clic |
+| 7. El repositorio | `git clone` y `orca repo add --path <ruta>` | No |
+| 8. Arrancar | Pegar `agentes/00-coordinador.md` en una pestaña de agente | No |
+
+Un detalle que despista la primera vez: **Codex y Claude enseñan pantallas de bienvenida** (sesión,
+navegador, etc.) que dejan la pestaña esperando. Hay que contestarlas una vez por máquina; después
+ya no aparecen.
+
+Para que esto sirva con datos reales hay dos cosas más, que son instalación y configuración, no
+programación:
+
+- **El conector a sus datos.** Un MCP de SQL Server con un usuario de **solo lectura** sobre las
+  vistas de facturación, instalado en esa máquina, y las credenciales en su sitio.
+- **Cambiar la fuente en las instrucciones.** El Detector hoy lee `datos/facturas-2026-09.json`; en
+  real leería por el conector. Es una frase en su fichero de texto, no código.
+
+Y si quieres que se ejecute solo cada mañana, en vez de que alguien pegue el texto: `lanzar.sh` con
+`RESPUESTA_AUTO`, o una tarea programada de Orca (`orca automations create`). Ojo: si nadie aprueba,
+la puerta de decisión deja de tener sentido; para desatendido, que el agente solo lea e informe.
+
 ## Qué queda en `salida/`
 
 | Fichero | Quién lo escribe |
