@@ -62,7 +62,8 @@ fi
 
 echo "6. Esta carpeta registrada en Orca"
 if command -v orca >/dev/null 2>&1 && orca status --json >/dev/null 2>&1; then
-  [ -d "$CARPETA/.git" ] || git -C "$CARPETA" init -q 2>/dev/null
+  # Solo si la carpeta no está ya dentro de un repositorio: Orca trabaja mejor con uno.
+  git -C "$CARPETA" rev-parse --show-toplevel >/dev/null 2>&1 || git -C "$CARPETA" init -q 2>/dev/null
   if orca repo list 2>/dev/null | grep -qF "$CARPETA"; then
     ok "ya estaba registrada"
   else
