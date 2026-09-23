@@ -1,0 +1,1014 @@
+{
+  "period": "2026-09",
+  "invoices": [
+    {
+      "id": "fac-01",
+      "number": "FV-2026-0412",
+      "clientId": "horno-real",
+      "siteId": "hr-centro",
+      "date": "2026-09-02",
+      "dueDate": "2026-10-02",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Pedido de consumibles",
+      "lines": [
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 10,
+          "unitPrice": 32,
+          "vatRate": 21,
+          "total": 320
+        },
+        {
+          "description": "Etiquetas de alérgenos (rollo de 1.000)",
+          "sku": "ETQ-ALE",
+          "qty": 4,
+          "unitPrice": 14.5,
+          "vatRate": 21,
+          "total": 58
+        }
+      ],
+      "subtotal": 378,
+      "vatTotal": 79.38,
+      "total": 457.38
+    },
+    {
+      "id": "fac-02",
+      "number": "FV-2026-0413",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-getafe",
+      "date": "2026-09-02",
+      "dueDate": "2026-10-02",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Pedido de consumibles",
+      "lines": [
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 6,
+          "unitPrice": 31.5,
+          "vatRate": 21,
+          "total": 189
+        }
+      ],
+      "subtotal": 189,
+      "vatTotal": 39.69,
+      "total": 228.69
+    },
+    {
+      "id": "fac-03",
+      "number": "FV-2026-0414",
+      "clientId": "forn-del-barri",
+      "siteId": "fb-gracia",
+      "date": "2026-09-03",
+      "dueDate": "2026-09-18",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Pedido de consumibles",
+      "lines": [
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 5,
+          "unitPrice": 34,
+          "vatRate": 21,
+          "total": 170
+        },
+        {
+          "description": "Etiquetas de alérgenos (rollo de 1.000)",
+          "sku": "ETQ-ALE",
+          "qty": 2,
+          "unitPrice": 15,
+          "vatRate": 21,
+          "total": 30
+        }
+      ],
+      "subtotal": 200,
+      "vatTotal": 42,
+      "total": 224
+    },
+    {
+      "id": "fac-04",
+      "number": "FV-2026-0415",
+      "clientId": "horno-real",
+      "siteId": "hr-ruzafa",
+      "date": "2026-09-04",
+      "dueDate": "2026-10-04",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Visita técnica",
+      "lines": [
+        {
+          "description": "Visita técnica fuera de contrato · sustitución de cajón portamonedas",
+          "sku": "VIS-TEC",
+          "qty": 1,
+          "unitPrice": 65,
+          "vatRate": 21,
+          "total": 65
+        }
+      ],
+      "subtotal": 65,
+      "vatTotal": 13.65,
+      "total": 78.65
+    },
+    {
+      "id": "fac-05",
+      "number": "FV-2026-0416",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-alcala",
+      "date": "2026-09-05",
+      "dueDate": "2026-10-05",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Suministro de equipos",
+      "lines": [
+        {
+          "description": "Impresora de tickets térmica",
+          "sku": "HW-IMP",
+          "qty": 1,
+          "unitPrice": 145,
+          "vatRate": 21,
+          "total": 145
+        }
+      ],
+      "subtotal": 145,
+      "vatTotal": 30.45,
+      "total": 175.45
+    },
+    {
+      "id": "fac-06",
+      "number": "FV-2026-0417",
+      "clientId": "horno-real",
+      "siteId": "hr-campanar",
+      "date": "2026-09-08",
+      "dueDate": "2026-10-08",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Renovación de datáfonos",
+      "lines": [
+        {
+          "description": "Datáfono Android con impresora",
+          "sku": "HW-DAT",
+          "qty": 2,
+          "unitPrice": 329,
+          "vatRate": 21,
+          "total": 658
+        }
+      ],
+      "subtotal": 658,
+      "vatTotal": 138.18,
+      "total": 796.18
+    },
+    {
+      "id": "fac-07",
+      "number": "FV-2026-0418",
+      "clientId": "forn-del-barri",
+      "siteId": "fb-poblenou",
+      "date": "2026-09-08",
+      "dueDate": "2026-09-23",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Renovación de datáfonos",
+      "lines": [
+        {
+          "description": "Datáfono Android con impresora",
+          "sku": "HW-DAT",
+          "qty": 3,
+          "unitPrice": 299,
+          "vatRate": 21,
+          "total": 897
+        },
+        {
+          "description": "Descuento comercial 20 %",
+          "sku": "DTO",
+          "qty": 1,
+          "unitPrice": -179.4,
+          "vatRate": 21,
+          "total": -179.4
+        }
+      ],
+      "subtotal": 717.6,
+      "vatTotal": 150.7,
+      "total": 868.3,
+      "notes": "Descuento del 20 % aplicado a petición del encargado de la tienda por las caídas del datáfono en agosto. Según el comercial se acordó por teléfono con gerencia; no consta por escrito."
+    },
+    {
+      "id": "fac-08",
+      "number": "FV-2026-0419",
+      "clientId": "horno-real",
+      "siteId": "hr-cabanyal",
+      "date": "2026-09-09",
+      "dueDate": "2026-10-09",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Pedido de consumibles",
+      "lines": [
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 4,
+          "unitPrice": 32,
+          "vatRate": 21,
+          "total": 128
+        }
+      ],
+      "subtotal": 128,
+      "vatTotal": 26.88,
+      "total": 154.88
+    },
+    {
+      "id": "fac-09",
+      "number": "FV-2026-0420",
+      "clientId": "horno-real",
+      "siteId": "hr-benimaclet",
+      "date": "2026-09-11",
+      "dueDate": "2026-10-11",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Formación de personal",
+      "lines": [
+        {
+          "description": "Formación presencial · nuevo personal de caja",
+          "sku": "FOR-HOR",
+          "qty": 3,
+          "unitPrice": 45,
+          "vatRate": 21,
+          "total": 135
+        }
+      ],
+      "subtotal": 135,
+      "vatTotal": 28.35,
+      "total": 163.35
+    },
+    {
+      "id": "fac-10",
+      "number": "FV-2026-0421",
+      "clientId": "forn-del-barri",
+      "siteId": "fb-sants",
+      "date": "2026-09-12",
+      "dueDate": "2026-09-27",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Visita técnica",
+      "lines": [
+        {
+          "description": "Visita técnica fuera de contrato · router sin conexión tras obra en el local",
+          "sku": "VIS-TEC",
+          "qty": 1,
+          "unitPrice": 70,
+          "vatRate": 21,
+          "total": 70
+        }
+      ],
+      "subtotal": 70,
+      "vatTotal": 14.7,
+      "total": 84.7
+    },
+    {
+      "id": "fac-11",
+      "number": "FV-2026-0422",
+      "clientId": "horno-real",
+      "siteId": "hr-patraix",
+      "date": "2026-09-15",
+      "dueDate": "2026-10-15",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Suministro de equipos y consumibles",
+      "lines": [
+        {
+          "description": "Impresora de tickets térmica",
+          "sku": "HW-IMP",
+          "qty": 1,
+          "unitPrice": 149,
+          "vatRate": 21,
+          "total": 149
+        },
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 2,
+          "unitPrice": 32,
+          "vatRate": 21,
+          "total": 64
+        }
+      ],
+      "subtotal": 213,
+      "vatTotal": 44.73,
+      "total": 257.73
+    },
+    {
+      "id": "fac-12",
+      "number": "FV-2026-0423",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-getafe",
+      "date": "2026-09-16",
+      "dueDate": "2026-10-16",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Formación de personal",
+      "lines": [
+        {
+          "description": "Formación presencial · módulo de fidelización",
+          "sku": "FOR-HOR",
+          "qty": 4,
+          "unitPrice": 42,
+          "vatRate": 21,
+          "total": 168
+        }
+      ],
+      "subtotal": 168,
+      "vatTotal": 35.28,
+      "total": 203.28
+    },
+    {
+      "id": "fac-13",
+      "number": "FV-2026-0424",
+      "clientId": "horno-real",
+      "siteId": "hr-centro",
+      "date": "2026-09-18",
+      "dueDate": "2026-10-18",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Suministro de equipos",
+      "lines": [
+        {
+          "description": "Impresora de tickets térmica · segundo puesto de cobro",
+          "sku": "HW-IMP",
+          "qty": 2,
+          "unitPrice": 149,
+          "vatRate": 21,
+          "total": 298
+        }
+      ],
+      "subtotal": 298,
+      "vatTotal": 62.58,
+      "total": 360.58
+    },
+    {
+      "id": "fac-14",
+      "number": "FV-2026-0425",
+      "clientId": "forn-del-barri",
+      "siteId": "fb-gracia",
+      "date": "2026-09-22",
+      "dueDate": "2026-10-07",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Pedido de consumibles",
+      "lines": [
+        {
+          "description": "Etiquetas de alérgenos (rollo de 1.000)",
+          "sku": "ETQ-ALE",
+          "qty": 6,
+          "unitPrice": 15,
+          "vatRate": 21,
+          "total": 90
+        }
+      ],
+      "subtotal": 90,
+      "vatTotal": 18.9,
+      "total": 108.9
+    },
+    {
+      "id": "fac-15",
+      "number": "FV-2026-0426",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-mostoles",
+      "date": "2026-09-23",
+      "dueDate": "2026-10-23",
+      "status": "issued",
+      "recurring": false,
+      "concept": "Pedido de consumibles",
+      "lines": [
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 3,
+          "unitPrice": 31.5,
+          "vatRate": 21,
+          "total": 94.5
+        }
+      ],
+      "subtotal": 94.5,
+      "vatTotal": 19.85,
+      "total": 114.35
+    },
+    {
+      "id": "fac-16",
+      "number": "BORR-2609-01",
+      "clientId": "horno-real",
+      "siteId": "hr-patraix",
+      "date": "2026-09-24",
+      "dueDate": "2026-10-24",
+      "status": "draft",
+      "recurring": false,
+      "concept": "Formación de personal",
+      "lines": [
+        {
+          "description": "Formación presencial · apertura de la tienda",
+          "sku": "FOR-HOR",
+          "qty": 8,
+          "unitPrice": 45,
+          "vatRate": 10,
+          "total": 360
+        }
+      ],
+      "subtotal": 360,
+      "vatTotal": 36,
+      "total": 396
+    },
+    {
+      "id": "fac-17",
+      "number": "BORR-2609-02",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-mostoles",
+      "date": "2026-09-26",
+      "dueDate": "2026-10-26",
+      "status": "draft",
+      "recurring": false,
+      "concept": "Pedido de consumibles",
+      "lines": [
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 4,
+          "unitPrice": 31.5,
+          "vatRate": 21,
+          "total": 126
+        },
+        {
+          "description": "Papel térmico 80 mm (caja de 50 rollos)",
+          "sku": "PAP-TER",
+          "qty": 4,
+          "unitPrice": 31.5,
+          "vatRate": 21,
+          "total": 126
+        }
+      ],
+      "subtotal": 252,
+      "vatTotal": 52.92,
+      "total": 304.92
+    },
+    {
+      "id": "fac-18",
+      "number": "BORR-2609-03",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-alcala",
+      "date": "2026-09-29",
+      "dueDate": "2026-10-29",
+      "status": "draft",
+      "recurring": false,
+      "concept": "Visitas técnicas",
+      "lines": [
+        {
+          "description": "Visita técnica fuera de contrato · sustitución de lector de códigos de barras",
+          "sku": "VIS-TEC",
+          "qty": 1,
+          "unitPrice": 60,
+          "vatRate": 21,
+          "total": 60
+        },
+        {
+          "description": "Revisión de horno de convección y cámara de fermentación (2 visitas)",
+          "sku": "VIS-TEC",
+          "qty": 2,
+          "unitPrice": 60,
+          "vatRate": 21,
+          "total": 120
+        }
+      ],
+      "subtotal": 180,
+      "vatTotal": 37.8,
+      "total": 217.8
+    },
+    {
+      "id": "fac-19",
+      "number": "BORR-2609-04",
+      "clientId": "horno-real",
+      "siteId": "hr-centro",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 39,
+          "vatRate": 21,
+          "total": 39
+        },
+        {
+          "description": "Licencia módulo de obrador y producción · septiembre 2026",
+          "sku": "LIC-OBR",
+          "qty": 1,
+          "unitPrice": 59,
+          "vatRate": 21,
+          "total": 59
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 24,
+          "vatRate": 21,
+          "total": 24
+        },
+        {
+          "description": "Soporte premium 7 días · septiembre 2026",
+          "sku": "SOP-PRE",
+          "qty": 1,
+          "unitPrice": 18,
+          "vatRate": 21,
+          "total": 18
+        }
+      ],
+      "subtotal": 140,
+      "vatTotal": 29.4,
+      "total": 169.4
+    },
+    {
+      "id": "fac-20",
+      "number": "BORR-2609-05",
+      "clientId": "horno-real",
+      "siteId": "hr-ruzafa",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 39,
+          "vatRate": 21,
+          "total": 39
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 24,
+          "vatRate": 21,
+          "total": 24
+        },
+        {
+          "description": "Soporte premium 7 días · septiembre 2026",
+          "sku": "SOP-PRE",
+          "qty": 1,
+          "unitPrice": 18,
+          "vatRate": 21,
+          "total": 18
+        }
+      ],
+      "subtotal": 81,
+      "vatTotal": 17.01,
+      "total": 98.01
+    },
+    {
+      "id": "fac-21",
+      "number": "BORR-2609-06",
+      "clientId": "horno-real",
+      "siteId": "hr-campanar",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 39,
+          "vatRate": 21,
+          "total": 39
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 24,
+          "vatRate": 21,
+          "total": 24
+        },
+        {
+          "description": "Soporte premium 7 días · septiembre 2026",
+          "sku": "SOP-PRE",
+          "qty": 1,
+          "unitPrice": 18,
+          "vatRate": 21,
+          "total": 18
+        }
+      ],
+      "subtotal": 81,
+      "vatTotal": 17.01,
+      "total": 98.01
+    },
+    {
+      "id": "fac-22",
+      "number": "BORR-2609-07",
+      "clientId": "horno-real",
+      "siteId": "hr-benimaclet",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 39,
+          "vatRate": 21,
+          "total": 39
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 24,
+          "vatRate": 21,
+          "total": 24
+        },
+        {
+          "description": "Soporte premium 7 días · septiembre 2026",
+          "sku": "SOP-PRE",
+          "qty": 1,
+          "unitPrice": 18,
+          "vatRate": 21,
+          "total": 18
+        }
+      ],
+      "subtotal": 81,
+      "vatTotal": 17.01,
+      "total": 98.01
+    },
+    {
+      "id": "fac-23",
+      "number": "BORR-2609-08",
+      "clientId": "horno-real",
+      "siteId": "hr-cabanyal",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 39,
+          "vatRate": 21,
+          "total": 39
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 24,
+          "vatRate": 21,
+          "total": 24
+        },
+        {
+          "description": "Soporte premium 7 días · septiembre 2026",
+          "sku": "SOP-PRE",
+          "qty": 1,
+          "unitPrice": 18,
+          "vatRate": 21,
+          "total": 18
+        }
+      ],
+      "subtotal": 81,
+      "vatTotal": 17.01,
+      "total": 98.01
+    },
+    {
+      "id": "fac-24",
+      "number": "BORR-2609-09",
+      "clientId": "horno-real",
+      "siteId": "hr-patraix",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 39,
+          "vatRate": 21,
+          "total": 39
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 24,
+          "vatRate": 21,
+          "total": 24
+        },
+        {
+          "description": "Soporte premium 7 días · septiembre 2026",
+          "sku": "SOP-PRE",
+          "qty": 1,
+          "unitPrice": 18,
+          "vatRate": 21,
+          "total": 18
+        }
+      ],
+      "subtotal": 81,
+      "vatTotal": 17.01,
+      "total": 98.01
+    },
+    {
+      "id": "fac-25",
+      "number": "BORR-2609-10",
+      "clientId": "forn-del-barri",
+      "siteId": "fb-gracia",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-15",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 42,
+          "vatRate": 21,
+          "total": 42
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 26,
+          "vatRate": 21,
+          "total": 26
+        },
+        {
+          "description": "Soporte estándar en días laborables · septiembre 2026",
+          "sku": "SOP-EST",
+          "qty": 1,
+          "unitPrice": 12,
+          "vatRate": 21,
+          "total": 12
+        },
+        {
+          "description": "Conectividad 4G de respaldo · septiembre 2026",
+          "sku": "CON-4G",
+          "qty": 1,
+          "unitPrice": 13,
+          "vatRate": 21,
+          "total": 13
+        }
+      ],
+      "subtotal": 93,
+      "vatTotal": 19.53,
+      "total": 112.53
+    },
+    {
+      "id": "fac-26",
+      "number": "BORR-2609-11",
+      "clientId": "forn-del-barri",
+      "siteId": "fb-sants",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-15",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 42,
+          "vatRate": 21,
+          "total": 42
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 26,
+          "vatRate": 21,
+          "total": 26
+        },
+        {
+          "description": "Soporte estándar en días laborables · septiembre 2026",
+          "sku": "SOP-EST",
+          "qty": 1,
+          "unitPrice": 12,
+          "vatRate": 21,
+          "total": 12
+        }
+      ],
+      "subtotal": 80,
+      "vatTotal": 16.8,
+      "total": 96.8
+    },
+    {
+      "id": "fac-27",
+      "number": "BORR-2609-12",
+      "clientId": "forn-del-barri",
+      "siteId": "fb-poblenou",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-15",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 42,
+          "vatRate": 21,
+          "total": 42
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 26,
+          "vatRate": 21,
+          "total": 26
+        },
+        {
+          "description": "Soporte estándar en días laborables · septiembre 2026",
+          "sku": "SOP-EST",
+          "qty": 1,
+          "unitPrice": 12,
+          "vatRate": 21,
+          "total": 12
+        },
+        {
+          "description": "Conectividad 4G de respaldo · septiembre 2026",
+          "sku": "CON-4G",
+          "qty": 1,
+          "unitPrice": 13,
+          "vatRate": 21,
+          "total": 13
+        }
+      ],
+      "subtotal": 93,
+      "vatTotal": 19.53,
+      "total": 112.53
+    },
+    {
+      "id": "fac-28",
+      "number": "BORR-2609-13",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-alcala",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 40,
+          "vatRate": 21,
+          "total": 40
+        },
+        {
+          "description": "Licencia módulo de fidelización · septiembre 2026",
+          "sku": "LIC-FID",
+          "qty": 1,
+          "unitPrice": 19,
+          "vatRate": 21,
+          "total": 19
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 25,
+          "vatRate": 21,
+          "total": 25
+        },
+        {
+          "description": "Soporte estándar en días laborables · septiembre 2026",
+          "sku": "SOP-EST",
+          "qty": 1,
+          "unitPrice": 12,
+          "vatRate": 21,
+          "total": 12
+        }
+      ],
+      "subtotal": 96,
+      "vatTotal": 20.16,
+      "total": 116.16
+    },
+    {
+      "id": "fac-29",
+      "number": "BORR-2609-14",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-getafe",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 40,
+          "vatRate": 21,
+          "total": 40
+        },
+        {
+          "description": "Licencia módulo de fidelización · septiembre 2026",
+          "sku": "LIC-FID",
+          "qty": 1,
+          "unitPrice": 19,
+          "vatRate": 21,
+          "total": 19
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 25,
+          "vatRate": 21,
+          "total": 25
+        },
+        {
+          "description": "Soporte estándar en días laborables · septiembre 2026",
+          "sku": "SOP-EST",
+          "qty": 1,
+          "unitPrice": 12,
+          "vatRate": 21,
+          "total": 12
+        }
+      ],
+      "subtotal": 96,
+      "vatTotal": 20.16,
+      "total": 116.16
+    },
+    {
+      "id": "fac-30",
+      "number": "BORR-2609-15",
+      "clientId": "pan-de-pueblo",
+      "siteId": "pp-mostoles",
+      "date": "2026-09-30",
+      "dueDate": "2026-10-30",
+      "status": "draft",
+      "recurring": true,
+      "concept": "Cuota mensual septiembre 2026",
+      "lines": [
+        {
+          "description": "Licencia de software TPV · septiembre 2026",
+          "sku": "LIC-TPV",
+          "qty": 1,
+          "unitPrice": 40,
+          "vatRate": 21,
+          "total": 40
+        },
+        {
+          "description": "Licencia módulo de fidelización · septiembre 2026",
+          "sku": "LIC-FID",
+          "qty": 1,
+          "unitPrice": 19,
+          "vatRate": 21,
+          "total": 19
+        },
+        {
+          "description": "Mantenimiento de equipos TPV · septiembre 2026",
+          "sku": "MNT-TPV",
+          "qty": 1,
+          "unitPrice": 25,
+          "vatRate": 21,
+          "total": 25
+        },
+        {
+          "description": "Soporte estándar en días laborables · septiembre 2026",
+          "sku": "SOP-EST",
+          "qty": 1,
+          "unitPrice": 12,
+          "vatRate": 21,
+          "total": 12
+        }
+      ],
+      "subtotal": 96,
+      "vatTotal": 20.16,
+      "total": 116.16
+    }
+  ]
+}

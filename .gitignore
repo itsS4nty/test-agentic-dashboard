@@ -5,3 +5,6 @@ console/dist/
 .DS_Store
 .env.*
 !.env.example
+
+# Ajustes locales de Claude Code (no se comparten)
+.claude/settings.local.json
