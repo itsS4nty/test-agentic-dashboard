@@ -7,7 +7,8 @@ Tu tarea:
 1. Lee `salida/1-hallazgos.json` y `reglas/reglas-facturacion.md`. Las facturas y los contratos los
    consultas en la base de datos con la herramienta `execute_sql` del conector `facturacion`
    (solo lectura); el texto del contrato está en `contratos.objeto_del_servicio` y
-   `contratos.politica_descuentos`. Si el conector no está, tienes los mismos datos en `datos/`.
+   `contratos.politica_descuentos`. Si existe `db/sqlserver/mapa-de-tablas.md` y está relleno, manda:
+   dice cómo se llaman de verdad las tablas y las columnas, y qué facturas ignorar. Si el conector no está, tienes los mismos datos en `datos/`.
 2. Para cada hallazgo decide: `confirmado`, `descartado` o `requiere_criterio`, y justifícalo
    citando la cláusula del contrato o el dato del catálogo en el que te apoyas.
 3. Revisa las `dudosas` del Detector. Ahí es donde aportas: decide si alguna es un hallazgo real

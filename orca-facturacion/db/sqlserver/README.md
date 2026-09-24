@@ -3,9 +3,28 @@
 Esta carpeta es lo que falta para que los agentes dejen de leer la base de datos de ejemplo y lean
 la facturación de verdad. Son tres pasos y ninguno es programar.
 
-La idea: **los agentes no leen vuestras tablas, leen nueve vistas**. Vosotros decidís qué hay detrás
-de cada vista y el agente solo ve eso. Si mañana cambiáis una tabla por dentro, se cambia la vista y
-los agentes ni se enteran.
+Hay **dos formas de hacerlo** y las dos están preparadas. Elegid una:
+
+| | Opción A: con vistas | Opción B: leyendo vuestras tablas |
+|---|---|---|
+| Qué hay que hacer | Crear nueve vistas | Rellenar un fichero con los nombres de vuestras tablas |
+| Qué ve el agente | Solo lo que exponéis | Las tablas a las que le deis permiso |
+| Si cambiáis una tabla | Se toca la vista, nada más | Hay que actualizar el mapa |
+| Filtros (anuladas, tres meses) | Los impone la base de datos | Dependen de que el agente los aplique |
+| Trabajo de vuestro DBA | Una hora larga | Unos minutos |
+
+**Recomiendo la A** si esto va a quedarse funcionando: los filtros y los permisos los impone la base,
+no la buena voluntad del agente. La **B** es perfecta para probar rápido y decidir después.
+
+Las dos usan el mismo usuario de solo lectura y el mismo conector; lo único que cambia es sobre qué
+le dais permiso y si rellenáis el mapa.
+
+---
+
+# Opción A: con vistas
+
+Los agentes no leen vuestras tablas, leen nueve vistas. Vosotros decidís qué hay detrás de cada una.
+Si mañana cambiáis una tabla por dentro, se cambia la vista y los agentes ni se enteran.
 
 ## Paso 1. Crear las vistas
 
@@ -71,16 +90,59 @@ codex "Con la herramienta execute_sql del conector facturacion, ejecuta: SELECT 
 
 Si responde un número, ya está: los agentes leen vuestra facturación.
 
-## Paso 4. Ajustar las instrucciones, si hace falta
+---
 
-Los agentes esperan los nombres de tabla de las vistas (`facturas`, `lineas`, `contratos`…). Si en
-las vistas usáis el esquema `agente`, en las consultas hay que escribir `agente.facturas`. Decídselo
-una vez, en dos sitios:
+# Opción B: leer directamente de vuestras tablas
 
-- `agentes/01-detector.md`, donde dice de dónde saca las facturas.
-- `agentes/02-analista.md`, donde dice dónde están los contratos.
+Si preferís no crear vistas, los agentes pueden ir contra vuestras tablas. Son dos pasos.
 
-Es un párrafo en cada uno, en castellano. No hay nada más que tocar.
+## B1. Dar permiso, tabla a tabla
+
+Ejecutad [`03-permisos-tablas-directas.sql`](03-permisos-tablas-directas.sql), que crea el mismo
+usuario de solo lectura y le da `SELECT` **solo sobre las tablas que listéis**.
+
+No useis `db_datareader`: eso le daría la base entera, nóminas incluidas. Una línea por tabla, y solo
+las nueve que necesita.
+
+## B2. Rellenar el mapa de tablas
+
+Rellenad [`mapa-de-tablas.md`](mapa-de-tablas.md): una línea por concepto, diciendo cómo se llama en
+vuestra base. **Los agentes leen ese fichero antes de consultar nada** y usan esos nombres; no hay
+que tocar sus instrucciones.
+
+Para no escribirlo a mano, dadle también permiso de ver el esquema
+(`GRANT VIEW DEFINITION ON SCHEMA::dbo`) y pedidle al agente que explore y os proponga el mapa:
+
+```bash
+codex "Con la herramienta search_objects del conector facturacion, explora el esquema y proponme
+el contenido de db/sqlserver/mapa-de-tablas.md. No inventes: si dudas entre dos tablas, dilo."
+```
+
+Revisadlo vosotros antes de darlo por bueno: él ve nombres, vosotros sabéis cuál es la tabla buena
+cuando hay tres que se parecen.
+
+En el apartado «Reglas de la casa» del mapa está lo más importante y lo que nadie apunta nunca: qué
+facturas hay que ignorar, qué ventana de tiempo mirar y si algún importe lleva el IVA incluido.
+
+## Lo que perdéis con esta opción
+
+- **Los filtros pasan a ser una instrucción, no un candado.** Que el agente mire solo los últimos
+  tres meses y salte las anuladas depende de que lo haga; con vistas, la base no le enseña otra cosa.
+- **Cada cambio en vuestro esquema obliga a tocar el mapa.** Con vistas, se toca la vista.
+- **El agente ve los nombres reales de vuestras tablas.** Sin importancia si es interno, algo a
+  pensar si algún día ese agente lo maneja alguien de fuera.
+
+---
+
+# Un detalle común a las dos opciones
+
+Los agentes usan por defecto los nombres `facturas`, `lineas`, `contratos`… a secas. Si vuestras
+vistas van en el esquema `agente` (como en `01-vistas.sql`) o vuestras tablas tienen otros nombres,
+**rellenad `mapa-de-tablas.md`**: por ejemplo `agente.facturas` en vez de `facturas`. Los agentes lo
+leen antes de consultar y usan lo que ponga ahí.
+
+Es decir: el mapa sirve para las dos opciones, y mientras esté puesto, **no hay que tocar ningún
+fichero de los agentes**.
 
 ## Qué NO está probado
 
