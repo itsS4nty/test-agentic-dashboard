@@ -1,0 +1,77 @@
+{
+  "hallazgos": [
+    {
+      "id": "H-01",
+      "factura": "FV-2026-0417",
+      "facturaId": "fac-06",
+      "cliente": "horno-real",
+      "tienda": "hr-campanar",
+      "estado": "issued",
+      "comprobacion": "precio_contrato",
+      "detalle": "HW-DAT: 2 unidades a 329,00 EUR frente a 289,00 EUR pactados; exceso de base 80,00 EUR y de total con IVA (21 %) 96,80 EUR.",
+      "impactoEur": 96.8
+    },
+    {
+      "id": "H-02",
+      "factura": "BORR-2609-01",
+      "facturaId": "fac-16",
+      "cliente": "horno-real",
+      "tienda": "hr-patraix",
+      "estado": "draft",
+      "comprobacion": "iva_catalogo",
+      "detalle": "Línea FOR-HOR: IVA aplicado 10 %; la categoría en catálogo establece 21 %. Diferencia de IVA sobre base 360,00 EUR: 39,60 EUR.",
+      "impactoEur": 39.6
+    },
+    {
+      "id": "H-03",
+      "factura": "FV-2026-0414",
+      "facturaId": "fac-03",
+      "cliente": "forn-del-barri",
+      "tienda": "fb-gracia",
+      "estado": "issued",
+      "comprobacion": "total_descuadrado",
+      "detalle": "Las bases suman 200,00 EUR y el IVA 42,00 EUR; total calculado 242,00 EUR frente a 224,00 EUR guardados. Diferencia absoluta: 18,00 EUR.",
+      "impactoEur": 18.0
+    },
+    {
+      "id": "H-04",
+      "factura": "BORR-2609-02",
+      "facturaId": "fac-17",
+      "cliente": "pan-de-pueblo",
+      "tienda": "pp-mostoles",
+      "estado": "draft",
+      "comprobacion": "linea_duplicada",
+      "detalle": "PAP-TER aparece dos veces con cantidad 4 y precio unitario 31,50 EUR; la segunda línea duplica un importe de 126,00 EUR más IVA (21 %), 152,46 EUR.",
+      "impactoEur": 152.46
+    },
+    {
+      "id": "H-05",
+      "factura": "BORR-2609-11",
+      "facturaId": "fac-26",
+      "cliente": "forn-del-barri",
+      "tienda": "fb-sants",
+      "estado": "draft",
+      "comprobacion": "servicio_no_facturado",
+      "detalle": "La cuota mensual no incluye el servicio activo CON-4G de esta tienda; tarifa pactada 13,00 EUR más IVA (21 %), total 15,73 EUR.",
+      "impactoEur": 15.73
+    }
+  ],
+  "dudosas": [
+    {
+      "factura": "FV-2026-0415",
+      "porQue": "La descripción indica visita técnica fuera de contrato; determinar si la sustitución del cajón portamonedas está cubierta requiere interpretar el alcance."
+    },
+    {
+      "factura": "FV-2026-0418",
+      "porQue": "Incluye un descuento del 20 % cuya nota dice que se acordó por teléfono y que no consta por escrito; requiere revisar el respaldo del acuerdo."
+    },
+    {
+      "factura": "FV-2026-0421",
+      "porQue": "La descripción indica visita técnica fuera de contrato por un router sin conexión tras obras; valorar cobertura y responsabilidad requiere criterio."
+    },
+    {
+      "factura": "BORR-2609-03",
+      "porQue": "Una visita descrita para revisar horno de convección y cámara de fermentación puede referirse a maquinaria de obrador excluida por contrato; confirmar el alcance requiere criterio."
+    }
+  ]
+}

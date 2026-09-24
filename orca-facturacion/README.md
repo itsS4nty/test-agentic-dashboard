@@ -28,7 +28,8 @@ razona. Con la suscripción que ya tengas, sin pagar tokens aparte.
 |---|---|
 | `agentes/` | Los cuatro agentes, en texto plano. Es lo que de verdad importa. |
 | `reglas/` | Las comprobaciones de facturación, también en texto. |
-| `datos/` | 30 facturas de ejemplo de septiembre de 2026, con sus contratos y catálogo. |
+| `db/` | La base de datos: `docker compose up -d` y dentro están el esquema, los datos y el usuario de solo lectura. |
+| `datos/` | Los mismos datos en JSON, por si no quieres levantar la base de datos. |
 | `salida/` | Donde escriben los agentes al ejecutarse. |
 | `ejemplo-de-ejecucion/` | El resultado de una ejecución real, para verlo sin lanzar nada. |
 | `preparar-maquina.sh` | Deja la máquina lista y te dice qué falta. Opcional. |
@@ -52,6 +53,8 @@ hacer tú. A mano son estos siete pasos:
 | 5. Iniciar sesión | `codex login`, se abre el navegador | Sí, es su cuenta |
 | 6. Argumento de Codex en Orca | Ajustes → Agentes → Codex: `--dangerously-bypass-approvals-and-sandbox` | Sí, un clic |
 | 7. Registrar esta carpeta | `orca repo add --path <ruta de esta carpeta>` | No |
+| 8. Base de datos | `cd db && docker compose up -d` | No |
+| 9. Conector de la base de datos | El bloque `[mcp_servers.facturacion]` en `~/.codex/config.toml` | No |
 
 Sobre el paso 6: dentro de su cajón de arena, Codex no alcanza a Orca (comprobado:
 `runtimeReachable: false`) y no puede avisar de que ha terminado. Es la razón por la que Orca trae
@@ -59,6 +62,39 @@ ese modo activado de fábrica. Asúmelo solo en una máquina dedicada y con acce
 
 Un detalle que despista la primera vez: **Codex y Claude enseñan pantallas de bienvenida** que dejan
 la pestaña esperando sin que se note. Se contestan una vez por máquina y ya no vuelven.
+
+## La base de datos
+
+Los agentes leen de un Postgres, como leerán del SQL Server de HitSystems:
+
+```bash
+cd db && docker compose up -d
+```
+
+Levanta un Postgres 17 en el puerto 5434 y carga solo con arrancar: el esquema
+(`db/init/01-esquema.sql`), los datos de septiembre (`02-datos.sql`) y un usuario `agente` que
+**solo puede hacer SELECT** (`03-usuario-lectura.sql`). Son nueve tablas: facturas y sus líneas,
+contratos con sus tarifas pactadas y servicios activos por tienda, catálogo con el IVA de cada
+categoría, y clientes y tiendas.
+
+El agente llega ahí con un conector MCP, [DBHub](https://github.com/bytebase/dbhub), que además se
+declara de solo lectura. Dos candados: aunque alguien cambie las instrucciones del agente, sigue sin
+poder escribir. Para registrarlo en Codex, añade esto a `~/.codex/config.toml` con la ruta de tu
+carpeta:
+
+```toml
+[mcp_servers.facturacion]
+command = "npx"
+args = ["-y", "@bytebase/dbhub@latest", "--config", "<ruta>/db/dbhub.toml"]
+startup_timeout_sec = 60
+tool_timeout_sec = 120
+```
+
+Compruébalo con `codex mcp list`. Para Claude Code ya está el `.mcp.json` de la carpeta, que apunta
+al mismo fichero de conexión.
+
+Si no levantas la base de datos, los agentes se apañan con los JSON de `datos/`: lo dicen en su
+informe y siguen. Así la demo nunca se queda tirada.
 
 ## Ejecutarlo
 
@@ -88,12 +124,16 @@ la puerta de decisión sobra y las escrituras deberían esperar a que alguien la
 
 ## Usarlo con datos reales
 
-Hoy el Detector lee `datos/facturas-2026-09.json`. Para leer un SQL Server hacen falta dos cosas, y
-ninguna es programar:
+Hoy los agentes leen del Postgres de `db/`. Cambiar eso por su SQL Server es sustituir el conector,
+no tocar los agentes:
 
 1. Instalar en esa máquina un conector MCP de SQL Server, con un usuario de **solo lectura** sobre
-   las vistas de facturación.
-2. Cambiar en `agentes/01-detector.md` la frase que dice de dónde saca las facturas.
+   las vistas de facturación, y registrarlo igual que el de aquí.
+2. Ajustar en `agentes/01-detector.md` y `agentes/02-analista.md` los nombres de las tablas, si allí
+   se llaman de otra forma. Son dos párrafos de texto.
+
+El esquema de `db/init/01-esquema.sql` sirve además de guion de la conversación con ellos: es lo que
+el agente necesita saber de su facturación, y se ve de un vistazo si en su base falta algo.
 
 Las reglas de `reglas/reglas-facturacion.md` se editan igual: son texto, las mantiene quien sepa de
 facturación, no quien sepa programar.

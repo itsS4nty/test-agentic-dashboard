@@ -1,0 +1,23 @@
+# Directorio de clientes y tiendas. Datos ficticios para la demo.
+clients:
+  - id: horno-real
+    name: Panaderías Horno Real
+    sites:
+      - { id: hr-centro,     name: Centro,     city: Valencia, open: "06:30", close: "21:00" }
+      - { id: hr-ruzafa,     name: Ruzafa,     city: Valencia, open: "06:30", close: "21:00" }
+      - { id: hr-campanar,   name: Campanar,   city: Valencia, open: "07:00", close: "20:30" }
+      - { id: hr-benimaclet, name: Benimaclet, city: Valencia, open: "07:00", close: "20:30" }
+      - { id: hr-cabanyal,   name: Cabanyal,   city: Valencia, open: "06:30", close: "14:30" }
+      - { id: hr-patraix,    name: Patraix,    city: Valencia, open: "07:00", close: "21:00" }
+  - id: forn-del-barri
+    name: Forn del Barri
+    sites:
+      - { id: fb-gracia,   name: Gràcia,   city: Barcelona, open: "07:00", close: "21:00" }
+      - { id: fb-sants,    name: Sants,    city: Barcelona, open: "07:00", close: "20:00" }
+      - { id: fb-poblenou, name: Poblenou, city: Barcelona, open: "07:30", close: "20:00" }
+  - id: pan-de-pueblo
+    name: Pan de Pueblo
+    sites:
+      - { id: pp-alcala,  name: Alcalá,  city: Madrid, open: "06:00", close: "21:00" }
+      - { id: pp-getafe,  name: Getafe,  city: Madrid, open: "06:30", close: "20:30" }
+      - { id: pp-mostoles, name: Móstoles, city: Madrid, open: "06:30", close: "20:30" }

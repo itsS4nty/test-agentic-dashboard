@@ -1,0 +1,96 @@
+{
+  "dictamen": [
+    {
+      "id": "H-01",
+      "factura": "FV-2026-0417",
+      "veredicto": "confirmado",
+      "motivo": "CT-HR-2024-017 fija HW-DAT en 289,00 EUR/unidad; se cobraron 329,00 EUR por unidad en 2 unidades. Exceso de base 80,00 EUR, 96,80 EUR con IVA del 21 %.",
+      "accion": "proponer_rectificativa",
+      "estado": "escalado",
+      "impactoEur": 96.8,
+      "cliente": "horno-real"
+    },
+    {
+      "id": "H-02",
+      "factura": "BORR-2609-01",
+      "veredicto": "confirmado",
+      "motivo": "El catálogo asigna FOR-HOR a Formación (21 %); la línea aplica 10 % sobre base de 360,00 EUR. Diferencia de IVA: 39,60 EUR.",
+      "accion": "proponer_correccion",
+      "estado": "pendiente_aprobacion",
+      "impactoEur": 39.6,
+      "cliente": "horno-real"
+    },
+    {
+      "id": "H-03",
+      "factura": "FV-2026-0414",
+      "veredicto": "confirmado",
+      "motivo": "Las líneas suman 200,00 EUR de base y 42,00 EUR de IVA: el total correcto es 242,00 EUR, pero la factura guarda 224,00 EUR. Diferencia absoluta de 18,00 EUR.",
+      "accion": "proponer_rectificativa",
+      "estado": "escalado",
+      "impactoEur": 18.0,
+      "cliente": "forn-del-barri"
+    },
+    {
+      "id": "H-04",
+      "factura": "BORR-2609-02",
+      "veredicto": "confirmado",
+      "motivo": "La misma referencia PAP-TER, cantidad 4 y precio 31,50 EUR aparece dos veces. Una línea duplicada suma 126,00 EUR de base y 152,46 EUR con IVA del 21 %.",
+      "accion": "proponer_correccion",
+      "estado": "pendiente_aprobacion",
+      "impactoEur": 152.46,
+      "cliente": "pan-de-pueblo"
+    },
+    {
+      "id": "H-05",
+      "factura": "BORR-2609-11",
+      "veredicto": "confirmado",
+      "motivo": "El contrato CT-FB-2025-004 lista CON-4G como servicio activo en fb-sants, a 13,00 EUR/mes. Falta en la cuota; importe omitido con IVA del 21 %: 15,73 EUR.",
+      "accion": "proponer_correccion",
+      "estado": "pendiente_aprobacion",
+      "impactoEur": 15.73,
+      "cliente": "forn-del-barri"
+    },
+    {
+      "id": "H-06",
+      "factura": "FV-2026-0418",
+      "veredicto": "confirmado",
+      "motivo": "CT-FB-2025-004 dice: «Cualquier descuento o bonificación requiere acuerdo por escrito firmado por ambas partes». La nota solo refiere un acuerdo telefónico y dice que no consta por escrito; el descuento de 179,40 EUR de base equivale a 217,07 EUR con IVA.",
+      "accion": "proponer_rectificativa",
+      "estado": "escalado",
+      "impactoEur": 217.07,
+      "cliente": "forn-del-barri"
+    },
+    {
+      "id": "H-07",
+      "factura": "FV-2026-0415",
+      "veredicto": "requiere_criterio",
+      "motivo": "El contrato de horno-real cubre equipos de venta instalados, pero no menciona expresamente el cajón portamonedas ni determina si su sustitución se factura aparte. La factura identifica la visita como fuera de contrato; se requiere criterio sobre cobertura y facturación. Importe en revisión: 78,65 EUR.",
+      "accion": "proponer_rectificativa",
+      "estado": "escalado",
+      "impactoEur": 78.65,
+      "cliente": "horno-real"
+    },
+    {
+      "id": "H-08",
+      "factura": "FV-2026-0421",
+      "veredicto": "requiere_criterio",
+      "motivo": "El objeto de CT-FB-2025-004 incluye mantenimiento y soporte del router instalado en tienda, pero no establece si una visita por desconexión tras obras se cobra como servicio extraordinario. Hace falta criterio sobre la causa y la facturación; importe en revisión: 84,70 EUR.",
+      "accion": "proponer_rectificativa",
+      "estado": "escalado",
+      "impactoEur": 84.7,
+      "cliente": "forn-del-barri"
+    },
+    {
+      "id": "H-09",
+      "factura": "BORR-2609-03",
+      "veredicto": "confirmado",
+      "motivo": "CT-PP-2025-011 excluye expresamente la maquinaria de obrador, incluidos «hornos, cámaras, amasadoras». Las dos revisiones de horno de convección y cámara de fermentación no encajan en el objeto contratado: 120,00 EUR de base, 145,20 EUR con IVA del 21 %. La visita de sustitución del lector de códigos no se incluye en este hallazgo.",
+      "accion": "proponer_correccion",
+      "estado": "pendiente_aprobacion",
+      "impactoEur": 145.2,
+      "cliente": "pan-de-pueblo"
+    }
+  ],
+  "totalEur": 848.21,
+  "notas": "Totales de impacto en valor absoluto e IVA incluido según las reglas. Resultado: 7 confirmados, 0 descartados y 2 que requieren criterio; los importes de estos últimos siguen incluidos en el total en juego. Las visitas FV-2026-0415 y FV-2026-0421 no se resuelven con el texto contractual disponible, por lo que administración debe decidir cobertura y si se facturan aparte. No consta acuerdo escrito bilateral para el descuento de FV-2026-0418; se propone rectificativa para escalarlo."
+}

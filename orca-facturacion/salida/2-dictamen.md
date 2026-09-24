@@ -1,0 +1,17 @@
+# Dictamen de facturación
+
+Total en juego: 848.21 EUR
+
+| ID | Factura | Veredicto | Impacto (EUR) | Cliente | Acción | Estado | Motivo |
+|---|---|---|---:|---|---|---|---|
+| H-01 | FV-2026-0417 | confirmado | 96.80 | horno-real | proponer_rectificativa | escalado | CT-HR-2024-017 fija HW-DAT en 289,00 EUR/unidad; se cobraron 329,00 EUR por unidad en 2 unidades. Exceso de base 80,00 EUR, 96,80 EUR con IVA del 21 %. |
+| H-02 | BORR-2609-01 | confirmado | 39.60 | horno-real | proponer_correccion | pendiente_aprobacion | El catálogo asigna FOR-HOR a Formación (21 %); la línea aplica 10 % sobre base de 360,00 EUR. Diferencia de IVA: 39,60 EUR. |
+| H-03 | FV-2026-0414 | confirmado | 18.00 | forn-del-barri | proponer_rectificativa | escalado | Las líneas suman 200,00 EUR de base y 42,00 EUR de IVA: el total correcto es 242,00 EUR, pero la factura guarda 224,00 EUR. Diferencia absoluta de 18,00 EUR. |
+| H-04 | BORR-2609-02 | confirmado | 152.46 | pan-de-pueblo | proponer_correccion | pendiente_aprobacion | La misma referencia PAP-TER, cantidad 4 y precio 31,50 EUR aparece dos veces. Una línea duplicada suma 126,00 EUR de base y 152,46 EUR con IVA del 21 %. |
+| H-05 | BORR-2609-11 | confirmado | 15.73 | forn-del-barri | proponer_correccion | pendiente_aprobacion | El contrato CT-FB-2025-004 lista CON-4G como servicio activo en fb-sants, a 13,00 EUR/mes. Falta en la cuota; importe omitido con IVA del 21 %: 15,73 EUR. |
+| H-06 | FV-2026-0418 | confirmado | 217.07 | forn-del-barri | proponer_rectificativa | escalado | CT-FB-2025-004 dice: «Cualquier descuento o bonificación requiere acuerdo por escrito firmado por ambas partes». La nota solo refiere un acuerdo telefónico y dice que no consta por escrito; el descuento de 179,40 EUR de base equivale a 217,07 EUR con IVA. |
+| H-07 | FV-2026-0415 | requiere_criterio | 78.65 | horno-real | proponer_rectificativa | escalado | El contrato de horno-real cubre equipos de venta instalados, pero no menciona expresamente el cajón portamonedas ni determina si su sustitución se factura aparte. La factura identifica la visita como fuera de contrato; se requiere criterio sobre cobertura y facturación. Importe en revisión: 78,65 EUR. |
+| H-08 | FV-2026-0421 | requiere_criterio | 84.70 | forn-del-barri | proponer_rectificativa | escalado | El objeto de CT-FB-2025-004 incluye mantenimiento y soporte del router instalado en tienda, pero no establece si una visita por desconexión tras obras se cobra como servicio extraordinario. Hace falta criterio sobre la causa y la facturación; importe en revisión: 84,70 EUR. |
+| H-09 | BORR-2609-03 | confirmado | 145.20 | pan-de-pueblo | proponer_correccion | pendiente_aprobacion | CT-PP-2025-011 excluye expresamente la maquinaria de obrador, incluidos «hornos, cámaras, amasadoras». Las dos revisiones de horno de convección y cámara de fermentación no encajan en el objeto contratado: 120,00 EUR de base, 145,20 EUR con IVA del 21 %. La visita de sustitución del lector de códigos no se incluye en este hallazgo. |
+
+Notas: Totales de impacto en valor absoluto e IVA incluido según las reglas. Resultado: 7 confirmados, 0 descartados y 2 que requieren criterio; los importes de estos últimos siguen incluidos en el total en juego. Las visitas FV-2026-0415 y FV-2026-0421 no se resuelven con el texto contractual disponible, por lo que administración debe decidir cobertura y si se facturan aparte. No consta acuerdo escrito bilateral para el descuento de FV-2026-0418; se propone rectificativa para escalarlo.

@@ -37,12 +37,15 @@ RUN=$("$ORCA" orchestration run-create \
   --from "$COORD" --json | json "d['result']['run']['id']")
 echo "· Ejecución $RUN"
 
+# Las pestañas de Orca abren en la raíz del repositorio, así que cada agente recibe su carpeta.
+spec() { printf 'Tu carpeta de trabajo es %s: muévete a ella antes de nada.\n\n%s' "$ROOT" "$(cat "$1")"; }
+
 tarea() { # <fichero de instrucciones> <título> [deps json]
   if [ -n "${3:-}" ]; then
-    "$ORCA" orchestration task-create --spec "$(cat "$1")" --task-title "$2" --display-name "$2" \
+    "$ORCA" orchestration task-create --spec "$(spec "$1")" --task-title "$2" --display-name "$2" \
       --deps "$3" --from "$COORD" --run "$RUN" --json | json "d['result']['task']['id']"
   else
-    "$ORCA" orchestration task-create --spec "$(cat "$1")" --task-title "$2" --display-name "$2" \
+    "$ORCA" orchestration task-create --spec "$(spec "$1")" --task-title "$2" --display-name "$2" \
       --from "$COORD" --run "$RUN" --json | json "d['result']['task']['id']"
   fi
 }

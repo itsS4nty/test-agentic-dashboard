@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "facturacion": {
+      "command": "npx",
+      "args": ["-y", "@bytebase/dbhub@latest", "--config", "${PWD}/db/dbhub.toml"]
+    }
+  }
+}

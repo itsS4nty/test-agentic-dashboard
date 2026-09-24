@@ -1,0 +1,28 @@
+# Base de datos de facturación para la demo.
+#
+#   cd db && docker compose up -d
+#
+# Levanta un Postgres con el esquema, los datos de septiembre y un usuario de solo lectura.
+# Escucha en el puerto 5433 para no chocar con otro Postgres que ya tengas.
+services:
+  facturacion:
+    image: postgres:17-alpine
+    container_name: facturacion-demo
+    environment:
+      POSTGRES_DB: facturacion
+      POSTGRES_USER: hit
+      POSTGRES_PASSWORD: hit
+      TZ: Europe/Madrid
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - facturacion-datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hit -d facturacion"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  facturacion-datos:

@@ -82,6 +82,26 @@ else
   falta "en Orca, Ajustes → Agentes → Codex, pon: --dangerously-bypass-approvals-and-sandbox"
 fi
 
+echo "8. Base de datos de facturación"
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^facturacion-demo$'; then
+    ok "contenedor en marcha"
+  else
+    echo "   levantando…"
+    (cd "$CARPETA/db" && docker compose up -d >/dev/null 2>&1) && ok "contenedor levantado (puerto 5434)" || falta "levántala: cd db && docker compose up -d"
+  fi
+else
+  falta "arranca Docker y luego: cd db && docker compose up -d"
+fi
+
+echo "9. Conector de la base de datos para el agente"
+CODEX_CFG="$HOME/.codex/config.toml"
+if [ -f "$CODEX_CFG" ] && grep -q "mcp_servers.facturacion" "$CODEX_CFG"; then
+  ok "conector registrado en Codex"
+else
+  falta "añade a ~/.codex/config.toml el bloque [mcp_servers.facturacion] que está en el README"
+fi
+
 echo
 if [ ${#PENDIENTE[@]} -eq 0 ]; then
   echo "Todo listo. Abre una pestaña de agente en Orca y pégale el contenido de agentes/00-coordinador.md"

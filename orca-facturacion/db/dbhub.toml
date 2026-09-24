@@ -1,0 +1,23 @@
+# Conexión que usan los agentes para leer la facturación.
+#
+# Va con el usuario "agente", que en la base de datos solo tiene permiso de SELECT, y además el
+# conector se declara de solo lectura. Dos candados, no uno: si alguien cambia las instrucciones del
+# agente, sigue sin poder escribir.
+#
+# Es una base de datos de demo en local: la contraseña está aquí a propósito. Con datos reales,
+# fuera de aquí.
+
+[[sources]]
+id = "facturacion"
+dsn = "postgres://agente:agente@localhost:5434/facturacion?sslmode=disable"
+query_timeout = 30
+
+[[tools]]
+name = "execute_sql"
+source = "facturacion"
+readonly = true
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "facturacion"
