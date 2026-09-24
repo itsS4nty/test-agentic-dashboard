@@ -28,7 +28,8 @@ razona. Con la suscripción que ya tengas, sin pagar tokens aparte.
 |---|---|
 | `agentes/` | Los cuatro agentes, en texto plano. Es lo que de verdad importa. |
 | `reglas/` | Las comprobaciones de facturación, también en texto. |
-| `db/` | La base de datos: `docker compose up -d` y dentro están el esquema, los datos y el usuario de solo lectura. |
+| `db/` | La base de datos de ejemplo: `docker compose up -d` y dentro están el esquema, los datos y el usuario de solo lectura. |
+| `db/sqlserver/` | Lo que HitSystems tiene que configurar para leer de su SQL Server: vistas, usuario y conector, con su propio README. |
 | `datos/` | Los mismos datos en JSON, por si no quieres levantar la base de datos. |
 | `salida/` | Donde escriben los agentes al ejecutarse. |
 | `ejemplo-de-ejecucion/` | El resultado de una ejecución real, para verlo sin lanzar nada. |
@@ -124,13 +125,13 @@ la puerta de decisión sobra y las escrituras deberían esperar a que alguien la
 
 ## Usarlo con datos reales
 
-Hoy los agentes leen del Postgres de `db/`. Cambiar eso por su SQL Server es sustituir el conector,
-no tocar los agentes:
+Hoy los agentes leen del Postgres de `db/`. Para leer de vuestro SQL Server está todo preparado en
+**[`db/sqlserver/`](db/sqlserver/README.md)**: las nueve vistas que hay que crear, el usuario de solo
+lectura y el fichero de conexión. El mismo conector sirve para los dos motores; solo cambia la cadena
+de conexión.
 
-1. Instalar en esa máquina un conector MCP de SQL Server, con un usuario de **solo lectura** sobre
-   las vistas de facturación, y registrarlo igual que el de aquí.
-2. Ajustar en `agentes/01-detector.md` y `agentes/02-analista.md` los nombres de las tablas, si allí
-   se llaman de otra forma. Son dos párrafos de texto.
+El resumen: los agentes no leen vuestras tablas, leen nueve vistas que vosotros definís. Así cambiáis
+lo de debajo sin tocar a los agentes, y los permisos se dan solo sobre eso.
 
 El esquema de `db/init/01-esquema.sql` sirve además de guion de la conversación con ellos: es lo que
 el agente necesita saber de su facturación, y se ve de un vistazo si en su base falta algo.

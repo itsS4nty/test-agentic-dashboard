@@ -1,0 +1,29 @@
+# Conexión de los agentes a vuestro SQL Server.
+#
+# Copiad este fichero a ~/.codex/dbhub.toml (o dejadlo aquí) y poned vuestros datos en el dsn.
+# El usuario es el de 02-usuario-lectura.sql: solo lectura y solo sobre las vistas del esquema
+# "agente". Además el conector se declara readonly: dos candados, no uno.
+#
+# Formato del dsn:
+#   sqlserver://usuario:contraseña@servidor:1433/base?sslmode=disable
+# Con instancia con nombre:
+#   sqlserver://usuario:contraseña@servidor:1433/base?sslmode=disable&instanceName=SQLEXPRESS
+# Si el servidor exige cifrado, cambiad sslmode=disable por sslmode=true.
+#
+# La contraseña en claro aquí dentro no es buena idea en producción: dejad el fichero con permisos
+# 600 y, mejor aún, pasadla por variable de entorno con env_vars en la configuración de Codex.
+
+[[sources]]
+id = "facturacion"
+dsn = "sqlserver://agente_facturacion:CAMBIAR-ESTA-CONTRASENA@SU-SERVIDOR:1433/SU_BASE?sslmode=disable"
+query_timeout = 30
+
+[[tools]]
+name = "execute_sql"
+source = "facturacion"
+readonly = true
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "facturacion"
