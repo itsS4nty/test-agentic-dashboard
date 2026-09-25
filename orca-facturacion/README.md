@@ -29,7 +29,7 @@ razona. Con la suscripción que ya tengas, sin pagar tokens aparte.
 | `agentes/` | Los cuatro agentes, en texto plano. Es lo que de verdad importa. |
 | `reglas/` | Las comprobaciones de facturación, también en texto. |
 | `db/` | La base de datos de ejemplo: `docker compose up -d` y dentro están el esquema, los datos y el usuario de solo lectura. |
-| `db/sqlserver/` | Lo que HitSystems tiene que configurar para leer de su SQL Server: vistas, usuario y conector, con su propio README. |
+| `db/sqlserver/` | Lo que hay que configurar para leer de un SQL Server: vistas o lectura directa de vuestras tablas, usuario de solo lectura y conector, con su propio README. |
 | `datos/` | Los mismos datos en JSON, por si no quieres levantar la base de datos. |
 | `salida/` | Donde escriben los agentes al ejecutarse. |
 | `ejemplo-de-ejecucion/` | El resultado de una ejecución real, para verlo sin lanzar nada. |
@@ -124,12 +124,21 @@ la puerta de decisión sobra y las escrituras deberían esperar a que alguien la
 ## Usarlo con datos reales
 
 Hoy los agentes leen del Postgres de `db/`. Para leer de vuestro SQL Server está todo preparado en
-**[`db/sqlserver/`](db/sqlserver/README.md)**: las nueve vistas que hay que crear, el usuario de solo
-lectura y el fichero de conexión. El mismo conector sirve para los dos motores; solo cambia la cadena
-de conexión.
+**[`db/sqlserver/`](db/sqlserver/README.md)**, con **dos caminos a elegir**:
 
-El resumen: los agentes no leen vuestras tablas, leen nueve vistas que vosotros definís. Así cambiáis
-lo de debajo sin tocar a los agentes, y los permisos se dan solo sobre eso.
+- **Con vistas.** Creáis nueve vistas que apuntan a vuestras tablas. El agente solo ve eso, y los
+  filtros (últimos meses, sin anuladas) los impone la base de datos. Es lo más sólido si esto se
+  queda funcionando.
+- **Leyendo vuestras tablas.** Sin vistas: dais permiso de solo lectura tabla a tabla y rellenáis
+  `mapa-de-tablas.md`, un fichero donde apuntáis cómo se llama cada cosa en vuestra base. Los agentes
+  lo leen antes de consultar, así que no hay que tocar sus instrucciones. Se monta en minutos, pero
+  los filtros pasan a depender del agente y cada cambio de esquema obliga a actualizar el mapa.
+
+¿Y si no queréis ni rellenar el mapa? También vale: con permiso para ver el esquema, el agente
+explora la base y encuentra las tablas solo. Lo dejará escrito en su informe. Va más lento y puede
+dudar entre dos tablas parecidas, así que para algo que corre cada día es mejor el mapa.
+
+El mismo conector sirve para los dos motores; solo cambia la cadena de conexión.
 
 El esquema de `db/init/01-esquema.sql` sirve además de guion de la conversación con ellos: es lo que
 el agente necesita saber de su facturación, y se ve de un vistazo si en su base falta algo.
