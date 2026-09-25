@@ -34,7 +34,7 @@ razona. Con la suscripción que ya tengas, sin pagar tokens aparte.
 | `salida/` | Donde escriben los agentes al ejecutarse. |
 | `ejemplo-de-ejecucion/` | El resultado de una ejecución real, para verlo sin lanzar nada. |
 | `preparar-maquina.sh` | Deja la máquina lista y te dice qué falta. Opcional. |
-| `lanzar.sh`, `lanzar-claude.sh` | Para ejecutarlo sin nadie delante. Opcional. |
+| `lanzar.sh` | Para ejecutarlo sin nadie delante. Opcional. |
 
 ## Ponerlo en marcha en una máquina nueva
 
@@ -66,7 +66,7 @@ la pestaña esperando sin que se note. Se contestan una vez por máquina y ya no
 
 ## La base de datos
 
-Los agentes leen de un Postgres, como leerán del SQL Server de HitSystems:
+Los agentes leen de un Postgres, como leerán del SQL de vuestro server:
 
 ```bash
 cd db && docker compose up -d
@@ -117,8 +117,6 @@ cliente y un resumen interno.
 
 - `./lanzar.sh` hace de coordinador desde la terminal, con la misma orquestación. Con
   `RESPUESTA_AUTO="aprobar"` se ejecuta entera sola.
-- `./lanzar-claude.sh` es el respaldo con Claude, porque con Claude el lanzador supervisado de Orca
-  no arranca (ver abajo). Coordina por fuera y la aprobación va por fichero.
 
 Si va a correr solo cada mañana, mejor que los agentes solo lean e informen: sin nadie que apruebe,
 la puerta de decisión sobra y las escrituras deberían esperar a que alguien las mire.
@@ -155,7 +153,7 @@ agente puede gobernarlo todo, que es lo que permite que el coordinador sea otro 
   minuto y con Claude se queda siete minutos sin hacer nada. Codex, Cursor y Copilot están
   pre-confiados en su código; Claude no ([#21867](https://github.com/stablyai/orca/issues/21867)).
 - `orca orchestration ask`, la pregunta bloqueante, exige una tarea supervisada, así que con Claude
-  tampoco sirve. Por eso el respaldo con Claude aprueba por fichero.
+  tampoco sirve. Con Claude habría que coordinar por fuera y aprobar por fichero.
 - Las respuestas a una pregunta no vuelven a la bandeja del agente que la hizo.
 
 **Con Codex sí funciona**: `worker-start` arranca el agente, le entrega la tarea y recibe su aviso de

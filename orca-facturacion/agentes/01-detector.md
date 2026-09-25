@@ -11,6 +11,10 @@ Antes de consultar nada, mira si existe `db/sqlserver/mapa-de-tablas.md`. Si est
 manda: dice cómo se llaman de verdad las tablas y las columnas de esta instalación, y qué facturas
 hay que ignorar. Usa esos nombres en lugar de los de arriba.
 
+Si no hay mapa y esos nombres no existen en la base, no te rindas ni inventes: explora el esquema con
+la herramienta `search_objects` del conector, localiza las tablas equivalentes y sigue. Deja escrito
+en tu resumen qué tablas has usado, para que alguien pueda confirmarlo y rellenar el mapa de una vez.
+
 Si el conector no está disponible, dilo y usa `datos/facturas-2026-09.json` y
 `datos/contratos-y-catalogo.json`, que tienen los mismos datos.
 
